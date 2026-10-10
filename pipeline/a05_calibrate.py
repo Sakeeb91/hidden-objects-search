@@ -30,6 +30,9 @@ COHERENCE_MIN = 2.0   # period significant (summed -log10 FAP >= 2) in BOTH time
 S_MIN = 5.0
 S_LEVELS = [5.0, 8.0, 12.0, 20.0, 40.0]
 MATCH_ARCSEC = 2.0
+# Reported but excluded from recovery statistics (review 1, M4): J1023+0038 informed the
+# score design; J1947-1120 (P_orb = 246 h) lies outside the searched period range.
+NOT_INDEPENDENT = {"ctrl_J1023+0038", "ctrl_J1947-1120"}
 PERIODS = DATA / "trackA" / "periods"
 
 
@@ -83,6 +86,15 @@ def add_xray(d: pd.DataFrame) -> pd.DataFrame:
                     xray_any=[x["any_match"] for x in m])
 
 
+def control_summary(c: pd.DataFrame) -> dict:
+    def col(name, dtype):
+        return c[name] if name in c else pd.Series(dtype=dtype)
+    return {"n": int(len(c)), "found": int((col("status", object) == "found").sum()),
+            "period_ok": int(col("period_ok", object).fillna(False).astype(bool).sum()),
+            "spider_like": int(col("spider_like", object).fillna(False).astype(bool).sum()),
+            "rank1": int((col("rank_by_score", float) == 1).sum())}
+
+
 def period_match(p, true_p, tol=0.01):
     return any(abs(p / (true_p * k) - 1) < tol for k in (1.0, 0.5, 2.0))
 
@@ -132,6 +144,7 @@ def main():
                         "n_spider_like_in_field": int(spider_like(cd).sum())})
         rows.append(rec)
     ctrl = pd.DataFrame(rows)
+    ctrl["independent"] = ~ctrl["field"].isin(NOT_INDEPENDENT)
     ctrl.to_csv(RESULTS / "trackA" / "a05_controls.csv", index=False, float_format="%.6g")
 
     frozen = {
@@ -141,11 +154,10 @@ def main():
         "n_null_fields": int(len(null_fields)),
         "null_rate_by_score": lam,
         "null_rate_spider_like_with_uniform_xray": lam_x,
-        "controls": {"n": int(len(ctrl)),
-                     "found": int((ctrl.status == "found").sum()),
-                     "period_ok": int(ctrl.get("period_ok", pd.Series(dtype=bool)).fillna(False).sum()),
-                     "spider_like": int(ctrl.get("spider_like", pd.Series(dtype=bool)).fillna(False).sum()),
-                     "rank1": int((ctrl.get("rank_by_score", pd.Series(dtype=float)) == 1).sum())},
+        "controls_independent": control_summary(ctrl[ctrl["independent"]]),
+        "controls_all": control_summary(ctrl),
+        "control_caveat": "control ellipses are ~7x smaller in area than target ellipses, "
+                          "so ranks overstate sensitivity in target-sized fields",
     }
     (RESULTS / "trackA" / "a05_frozen_calibration.json").write_text(json.dumps(frozen, indent=2))
     print(json.dumps(frozen, indent=2))
