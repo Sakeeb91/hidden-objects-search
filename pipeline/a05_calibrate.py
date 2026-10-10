@@ -11,6 +11,7 @@ of each true companion among all in-ellipse sources.
 This stage refuses to read target fields. Its output JSON is committed BEFORE a06 runs.
 Usage: uv run python pipeline/a05_calibrate.py
 """
+import hashlib
 import json
 
 import numpy as np
@@ -19,7 +20,7 @@ from astropy.coordinates import SkyCoord
 
 from hos import xray
 from hos.fields import read_fields
-from hos.paths import DATA, RESULTS
+from hos.paths import DATA, RESULTS, ROOT
 from hos.sky import in_ellipse, sep_arcsec
 
 PERIOD_MIN_D, PERIOD_MAX_D = 1 / 24, 36 / 24
@@ -29,6 +30,22 @@ S_MIN = 5.0
 S_LEVELS = [5.0, 8.0, 12.0, 20.0, 40.0]
 MATCH_ARCSEC = 2.0
 PERIODS = DATA / "trackA" / "periods"
+
+
+# Files whose content defines the detection statistic and cuts. Their hashes are frozen with
+# the calibration; a06 refuses to run if any of them changed (review 1, M1).
+FROZEN_CODE = ["pipeline/a05_calibrate.py", "src/hos/period.py", "src/hos/sky.py",
+               "src/hos/xray.py", "src/hos/fields.py"]
+
+
+def code_hashes() -> dict:
+    return {f: hashlib.sha256((ROOT / f).read_bytes()).hexdigest() for f in FROZEN_CODE}
+
+
+def cuts() -> dict:
+    return {"period_min_d": PERIOD_MIN_D, "period_max_d": PERIOD_MAX_D, "amp_min_mag": AMP_MIN,
+            "amp_snr_min": AMP_SNR_MIN, "s_min": S_MIN, "bands_agree": True,
+            "inside_95pct_ellipse": True}
 
 
 def load(fields: pd.DataFrame) -> pd.DataFrame:
@@ -117,9 +134,8 @@ def main():
 
     frozen = {
         "frozen_before_targets": True,
-        "cuts": {"period_min_d": PERIOD_MIN_D, "period_max_d": PERIOD_MAX_D, "amp_min_mag": AMP_MIN,
-                 "amp_snr_min": AMP_SNR_MIN,
-                 "s_min": S_MIN, "bands_agree": True, "inside_95pct_ellipse": True},
+        "cuts": cuts(),
+        "code_sha256": code_hashes(),
         "n_null_fields": int(len(null_fields)),
         "null_rate_by_score": lam,
         "null_rate_spider_like_with_uniform_xray": lam_x,

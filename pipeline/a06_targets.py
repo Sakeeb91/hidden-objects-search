@@ -20,7 +20,7 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 from scipy.stats import poisson
 
-from a05_calibrate import add_xray, load, spider_like
+from a05_calibrate import add_xray, code_hashes, cuts, load, spider_like
 from hos import archives as A
 from hos import known
 from hos.fields import read_fields
@@ -39,6 +39,14 @@ def assert_frozen_committed():
                            cwd=ROOT).returncode == 0
     if not (tracked and clean):
         raise SystemExit("frozen calibration must be committed and unmodified before a06")
+
+
+def assert_code_matches(frozen: dict):
+    """The cuts and search code in use must be exactly those that were frozen."""
+    if frozen.get("cuts") != cuts():
+        raise SystemExit("cut constants differ from the frozen calibration")
+    if frozen.get("code_sha256") != code_hashes():
+        raise SystemExit("search/cut code changed since the calibration was frozen")
 
 
 def _vizier_cone(cat, ra, dec, radius):
@@ -95,6 +103,7 @@ def gaia_params(ra, dec) -> dict:
 def main():
     assert_frozen_committed()
     frozen = json.loads(FROZEN.read_text())
+    assert_code_matches(frozen)
     lam = frozen["null_rate_by_score"][str(frozen["cuts"]["s_min"])]["mean_per_ellipse"]
     lam_x = frozen["null_rate_spider_like_with_uniform_xray"]["mean_per_ellipse"]
 

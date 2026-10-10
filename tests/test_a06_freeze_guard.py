@@ -54,3 +54,17 @@ def test_committed_and_clean_passes(repo):
     frozen.write_text("{}")
     commit(root)
     a06.assert_frozen_committed()
+
+
+def test_changed_cut_constant_refuses(monkeypatch):
+    frozen = {"cuts": a06.cuts(), "code_sha256": a06.code_hashes()}
+    a06.assert_code_matches(frozen)  # identical -> passes
+    monkeypatch.setattr(a06, "cuts", lambda: {**frozen["cuts"], "s_min": 1.0})
+    with pytest.raises(SystemExit):
+        a06.assert_code_matches(frozen)
+
+
+def test_changed_code_hash_refuses():
+    frozen = {"cuts": a06.cuts(), "code_sha256": {**a06.code_hashes(), "src/hos/period.py": "0" * 64}}
+    with pytest.raises(SystemExit):
+        a06.assert_code_matches(frozen)
