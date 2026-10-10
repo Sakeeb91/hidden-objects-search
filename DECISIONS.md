@@ -55,3 +55,12 @@ API (a single field ran > 10 min without finishing). Applied |b| > 10° identica
 targets, null positions and controls. Deferred targets: 4FGL J1915.7−0846,
 J0705.0+1331, J1745.0−1953 (to revisit with a TAP pre-selection of ZTF objects).
 Also added NOBS_MIN = 40 server-side (objects sparser than the search minimum).
+
+## 2026-10-09 — Stellar-density cut (matched groups)
+
+The IRSA cone API could not serve fields toward the bulge (objects × high-cadence epochs):
+a 0.05° tile stalled > 5 min. Fields are now cut at 50,000 Gaia DR3 (G < 20.5) sources
+per deg² at the centre. A dense *target* is removed together with its three off-source
+fields so every remaining comparison stays matched. Deferred targets: 4FGL J1801.3+0554,
+J1920.5+3652 (in addition to the three |b| < 10° targets). Controls removed: J1705−1903,
+4FGL J1701.8−2226. Retained positions unchanged.
