@@ -72,3 +72,11 @@ Review 1 noted that a g/r pair whose peaks differ by an alias is rejected; a con
 "Bands agree" now means the shared-frequency period is independently significant in
 each band (−log10 Baluev FAP ≥ 2). Controls informed this design choice, as with the
 score form; the detection thresholds are still set only from off-source fields.
+
+## 2026-10-09 — One ZTF backend for every field: DR24 HATS on S3
+
+The IRSA light-curve API timed out on moderately dense fields and returned a different
+object count than DR24 HATS for the same cone (27 vs 20 objects with ≥ 40 good epochs,
+J1023+0038 field). To keep targets, nulls and controls strictly comparable, all fields use
+`lsdb` on `s3://ipac-irsa-ztf/ztf/enhanced/dr24/lc/hats` (heliocentric MJD). Earlier API
+downloads were set aside (`data/ztf_api_superseded/`), not mixed in.
