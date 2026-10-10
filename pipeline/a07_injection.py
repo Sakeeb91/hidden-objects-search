@@ -51,7 +51,7 @@ def trial(args):
         g["mag"] += amp * np.sin(phase)
     else:  # ellipsoidal: two minima per orbit
         g["mag"] += amp * np.cos(2 * phase)
-    freq = P.frequency_grid(float(np.ptp(g["mjd"])))
+    freq = P.frequency_grid()  # identical to production (a04)
     r = P.search_source(g, freq)
     if r is None:
         return None
