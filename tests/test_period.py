@@ -74,3 +74,17 @@ def test_signal_present_in_only_one_half_is_not_coherent():
     g.loc[late, "mag"] += 0.15 * np.sin(2 * np.pi * g.loc[late, "mjd"] / 0.3)
     out = P.search_source(g, P.frequency_grid(2400))
     assert out["coherence"] < 2
+
+
+def test_band_whose_argmax_is_a_daily_alias_still_agrees():
+    # g peaks on the daily alias but still shows the true period significantly
+    g = synth(period_d=0.3, amp=0.2)
+    out = P.search_source(g, P.frequency_grid(2400))
+    assert out["bands_agree"]
+
+
+def test_period_absent_from_one_band_does_not_agree():
+    g = synth(period_d=0.3, amp=0.2)
+    g.loc[g.filtercode == "zg", "mag"] = 18 + np.random.default_rng(5).normal(0, 0.03, (g.filtercode == "zg").sum())
+    out = P.search_source(g, P.frequency_grid(2400))
+    assert not out["bands_agree"]

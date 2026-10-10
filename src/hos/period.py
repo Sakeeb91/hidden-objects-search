@@ -26,7 +26,8 @@ ALIASES = np.concatenate([
     _N + 1 / 29.53, _N - 1 / 29.53,                 # lunar-month sidebands
     _N + 1 / 365.25, _N - 1 / 365.25,               # yearly sidebands
 ])
-BAND_AGREE = 0.002                    # relative frequency agreement between bands
+BAND_AGREE = 0.002                    # relative argmax agreement (diagnostic only)
+BAND_DETECT = 2.0                     # each band: -log10 FAP >= 2 AT the shared frequency
 
 
 def group_sources(df: pd.DataFrame) -> pd.DataFrame:
@@ -97,13 +98,19 @@ def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
     mean = np.mean(powers, axis=0)
     i = int(np.argmax(mean))
     f_best = freq[i]
-    agree = (len(best) < 2) or (abs(best.get("zg", f_best) - best.get("zr", f_best))
-                                / f_best < BAND_AGREE)
-    # Significance at the shared best frequency, summed over bands (independent data)
-    score = sum(band_log_fap(t, y, dy, pw[i]) for t, y, dy, pw in series.values())
+    argmax_agree = (len(best) < 2) or (abs(best.get("zg", f_best) - best.get("zr", f_best))
+                                       / f_best < BAND_AGREE)
+    # Significance at the shared best frequency, per band and summed (independent data).
+    # Bands "agree" if the period is independently significant in each of them; requiring
+    # identical per-band argmaxes failed when daily aliasing swapped one band's peak
+    # (review 1 minor; seen on control 1FGL J0523.5-2529).
+    band_lf = [band_log_fap(t, y, dy, pw[i]) for t, y, dy, pw in series.values()]
+    score = sum(band_lf)
+    agree = (len(band_lf) < 2) or (min(band_lf) >= BAND_DETECT)
     out = {"n_bands": len(bands), "bands": ",".join(sorted(bands)), "power": float(mean[i]),
            "score": float(score), "coherence": half_coherence(series, f_best),
            "period_d": float(1 / f_best), "bands_agree": bool(agree),
+           "argmax_agree": bool(argmax_agree), "min_band_logfap": float(min(band_lf)),
            "ra": float(g["ra"].median()), "dec": float(g["dec"].median()),
            "n_points": int(len(g))}
     for band in ("zg", "zr"):
