@@ -4,7 +4,7 @@ Refuses to run unless results/trackA/a05_frozen_calibration.json is committed an
 unmodified in git, so thresholds provably predate looking at targets.
 
 For each target ellipse: spider-like periodic sources (same cuts as a05), uniform and
-targeted X-ray matches, Gaia DR3 astrometry, and a novelty check (SpiderCat, SIMBAD,
+targeted X-ray matches, Gaia DR3 astrometry, and a novelty check (SpiderCat, Lu+2024, SIMBAD,
 VSX, ZTF periodic variables of Chen et al. 2020) with the date of the check. Each field's
 count is compared with the null background rate via a Poisson tail probability.
 
@@ -69,15 +69,17 @@ def simbad_cone(ra, dec, radius):
     return A.cached_frame("simbad", [q], build)
 
 
-def novelty(ra, dec, spiders: pd.DataFrame) -> dict:
+def novelty(ra, dec, spiders: pd.DataFrame, lu: pd.DataFrame) -> dict:
     sc = spiders[sep_arcsec(spiders.ra, spiders.dec, ra, dec) < 10.0]
+    lc = lu[sep_arcsec(lu.ra, lu.dec, ra, dec) < NOVELTY_RADIUS]
     sim = simbad_cone(ra, dec, NOVELTY_RADIUS)
     vsx = _vizier_cone("B/vsx/vsx", ra, dec, NOVELTY_RADIUS)
     chen = _vizier_cone("J/ApJS/249/18/table2", ra, dec, NOVELTY_RADIUS)
     return {"spidercat": ";".join(sc["Name"]) if len(sc) else "",
+            "lu2024": ";".join(lc["ztf_name"]) if len(lc) else "",
             "simbad": ";".join(f"{a} [{b}]" for a, b in zip(sim.get("main_id", []), sim.get("otype", []))),
             "vsx": ";".join(vsx["Name"].astype(str)) if "Name" in vsx else "",
-            "ztf_chen2020": ";".join(chen.iloc[:, 0].astype(str)) if len(chen) else ""}
+            "ztf_chen2020": ";".join(chen["ID"].astype(str)) if "ID" in chen else ""}
 
 
 def gaia_params(ra, dec) -> dict:
@@ -101,10 +103,11 @@ def main():
     cand = add_xray(d[spider_like(d)].copy())
     spiders = known.spidercat()
     today = dt.date.today().isoformat()
-    extra = [novelty(r.ra, r.dec, spiders) | gaia_params(r.ra, r.dec) for r in cand.itertuples()]
+    lu = known.lu2024()
+    extra = [novelty(r.ra, r.dec, spiders, lu) | gaia_params(r.ra, r.dec) for r in cand.itertuples()]
     cand = pd.concat([cand.reset_index(drop=True), pd.DataFrame(extra)], axis=1)
     cand["novelty_checked"] = today
-    cand["known"] = (cand[["spidercat", "simbad", "vsx", "ztf_chen2020"]].fillna("") != "").any(axis=1)
+    cand["known"] = (cand[["spidercat", "lu2024", "simbad", "vsx", "ztf_chen2020"]].fillna("") != "").any(axis=1)
     cand = cand.sort_values(["xray_uniform", "score"], ascending=False)
     cand.to_csv(RESULTS / "trackA" / "a06_candidates.csv", index=False, float_format="%.7g")
 
