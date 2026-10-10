@@ -39,7 +39,28 @@ def test_missing_gaia_match_is_recorded(missing):
 
 
 def test_too_long_pulse_excludes():
-    assert "K1" in b01.screen(row(dur_ratio=2.0), gaia(amp=500.0))["kills"]
+    r = row()
+    r.duration_hr = 20.0   # far longer than a central crossing at P = 5 d
+    assert "K1" in b01.screen(r, gaia(amp=500.0))["kills"]
+
+
+def test_duration_uses_companion_mass():
+    # Review 2: a heavier companion widens the orbit and shortens the allowed pulse, so
+    # the mass-aware ratio must exceed the planet-mass ratio for the same observation.
+    from hos import selflens as sl
+    r = row()
+    out = b01.screen(r, gaia(amp=500.0))
+    planet_hr = sl.central_duration_hr(r.period, r.rho * r.rstar**3, r.rstar)
+    assert out["dur_expected_hr"] < planet_hr
+
+
+def test_marginal_rv_range_is_not_excluded_with_few_epochs():
+    # range = 0.9 K at 5 epochs happens ~8% of the time for a real companion: no kill
+    out = b01.screen(row(), {1: {**gaia(amp=1.0)[1], "rv_nb_transits": 5,
+                                 "rv_amplitude_robust": 0.9 * b01.screen(row(), {})["K_kms"]}},
+                     n_tests=17)
+    assert "K2" not in out["kills"]
+    assert out["p_false_excl_familywise"] > 0.05
 
 
 def test_inverted_dip_cannot_become_a_pulse():
