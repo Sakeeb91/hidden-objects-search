@@ -15,6 +15,13 @@ NOBS_MIN = 40  # server-side: skip objects too sparse for the period search
 TILE_DEG = 0.05  # cones larger than this are split into sub-cones (dense fields time out)
 
 
+def tile_for_density(density_per_deg2: float, target_objects=300.0) -> float:
+    """Tile radius giving ~target_objects Gaia-bright sources per sub-cone (0.02-0.05 deg)."""
+    if not np.isfinite(density_per_deg2) or density_per_deg2 <= 0:
+        return TILE_DEG
+    return float(np.clip(np.sqrt(target_objects / (np.pi * density_per_deg2)), 0.02, TILE_DEG))
+
+
 def tile_centres(ra: float, dec: float, radius_deg: float, tile=TILE_DEG):
     """Centres of sub-cones of radius `tile` whose union covers the cone (square grid,
     spacing tile*sqrt(2), so neighbouring circles overlap and leave no gaps)."""
@@ -32,7 +39,7 @@ def tile_centres(ra: float, dec: float, radius_deg: float, tile=TILE_DEG):
     return out
 
 
-def _query(ra, dec, radius_deg, retries=4, timeout=900) -> pd.DataFrame:
+def _query(ra, dec, radius_deg, retries=3, timeout=600) -> pd.DataFrame:
     params = {"POS": f"CIRCLE {ra:.6f} {dec:.6f} {radius_deg:.5f}", "BANDNAME": "g,r",
               "FORMAT": "csv", "BAD_CATFLAGS_MASK": 32768, "NOBS_MIN": NOBS_MIN}
     for attempt in range(retries):
@@ -50,7 +57,7 @@ def _query(ra, dec, radius_deg, retries=4, timeout=900) -> pd.DataFrame:
     return pd.read_csv(io.StringIO(text)) if text.strip() else pd.DataFrame(columns=KEEP)
 
 
-def cone(ra: float, dec: float, radius_deg: float, field: str) -> pd.DataFrame:
+def cone(ra: float, dec: float, radius_deg: float, field: str, tile=TILE_DEG) -> pd.DataFrame:
     """All ZTF light-curve points inside a cone, good-quality epochs only (catflags == 0).
 
     Large cones are tiled into TILE_DEG sub-cones, de-duplicated on (oid, mjd, filter) and
@@ -60,8 +67,8 @@ def cone(ra: float, dec: float, radius_deg: float, field: str) -> pd.DataFrame:
     path = ensure(CACHE) / f"{field}.csv.gz"
     if path.exists():
         return pd.read_csv(path)
-    tiles = tile_centres(ra, dec, radius_deg)
-    tile_r = radius_deg if len(tiles) == 1 else TILE_DEG
+    tiles = tile_centres(ra, dec, radius_deg, tile)
+    tile_r = radius_deg if len(tiles) == 1 else tile
     parts = [_query(tr, td, tile_r)[KEEP] for tr, td in tiles]
     df = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=KEEP)
     df = df.drop_duplicates(["oid", "mjd", "filtercode"])

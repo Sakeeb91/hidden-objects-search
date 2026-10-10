@@ -10,6 +10,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import numpy as np
 import pandas as pd
 
 from hos import ztf
@@ -22,7 +23,8 @@ ORDER = {"control": 0, "offsource": 1, "target": 2}
 def fetch(row):
     t = time.time()
     try:
-        df = ztf.cone(row.ra, row.dec, row.a95, row.field)
+        df = ztf.cone(row.ra, row.dec, row.a95, row.field,
+                      tile=ztf.tile_for_density(getattr(row, "gaia_density", np.nan)))
         return {"field": row.field, "kind": row.kind, "status": "ok",
                 "n_points": len(df), "n_objects": df["oid"].nunique() if len(df) else 0,
                 "seconds": round(time.time() - t, 1)}
