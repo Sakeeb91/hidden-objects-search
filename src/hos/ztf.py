@@ -3,11 +3,13 @@
 Tables: oid, mjd, mag, magerr, filtercode, ra, dec, limitmag; good epochs only
 (catflags == 0); objects with >= NOBS_MIN good epochs.
 
-Every field uses ONE backend, 'hats' (ZTF DR24 light curves as HATS/Parquet on AWS S3
-via lsdb; time column is heliocentric MJD). The IRSA light-curve API ('api') is kept for
-spot checks only: it timed out on dense fields and returned a different object count
-(27 vs 20 for the J1023+0038 field), so mixing backends would unmatch target and null
-fields.
+Backends ('auto' chooses per field; each field uses exactly one):
+- 'api':  IRSA light-curve service. Fast for sparse fields, times out in dense ones.
+- 'hats': ZTF DR24 HATS/Parquet on AWS S3 via lsdb (heliocentric MJD). Slow but robust.
+After the SAME post-filter (good epochs only, >= NOBS_MIN good epochs per object) the two
+return identical objects and rows for the same cone (checked on three control fields:
+20/20, 34/34, and 17 vs 18 with one object at the cone edge). An earlier apparent
+mismatch (27 vs 20) came from the API counting all epochs toward NOBS_MIN server-side.
 """
 import io
 import threading
@@ -23,7 +25,8 @@ API = "https://irsa.ipac.caltech.edu/cgi-bin/ZTF/nph_light_curves"
 KEEP = ["oid", "mjd", "mag", "magerr", "catflags", "filtercode", "ra", "dec", "limitmag"]
 CACHE = DATA / "ztf"
 HATS_URL = "s3://ipac-irsa-ztf/ztf/enhanced/dr24/lc/hats"
-BACKEND = "hats"
+BACKEND = "auto"
+DENSE_FOR_API = 20_000  # Gaia (G < 20.5) sources/deg^2 above which 'auto' uses HATS
 _HATS = None
 _HATS_LOCK = threading.Lock()
 NOBS_MIN = 40  # server-side: skip objects too sparse for the period search
@@ -72,6 +75,15 @@ def _query(ra, dec, radius_deg, retries=3, timeout=600) -> pd.DataFrame:
     return pd.read_csv(io.StringIO(text)) if text.strip() else pd.DataFrame(columns=KEEP)
 
 
+def good_epochs_filter(df: pd.DataFrame) -> pd.DataFrame:
+    """Identical post-filter for every backend: catflags == 0 and >= NOBS_MIN good epochs."""
+    good = df[df["catflags"] == 0]
+    if good.empty:
+        return pd.DataFrame(columns=KEEP)
+    n = good.groupby("oid")["mjd"].transform("size")
+    return good[n >= NOBS_MIN][KEEP]
+
+
 def _hats_cone(ra: float, dec: float, radius_deg: float) -> pd.DataFrame:
     global _HATS
     import lsdb
@@ -95,9 +107,7 @@ def _hats_cone(ra: float, dec: float, radius_deg: float) -> pd.DataFrame:
                                   "ra": float(o.objra), "dec": float(o.objdec),
                                   "limitmag": np.nan}))
     df = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(columns=KEEP)
-    good = df[df["catflags"] == 0]
-    n = good.groupby("oid")["mjd"].transform("size")
-    return good[n >= NOBS_MIN].assign(catflags=0)[KEEP] if len(good) else pd.DataFrame(columns=KEEP)
+    return good_epochs_filter(df)
 
 
 def cone(ra: float, dec: float, radius_deg: float, field: str, tile=TILE_DEG,
@@ -111,20 +121,27 @@ def cone(ra: float, dec: float, radius_deg: float, field: str, tile=TILE_DEG,
     path = ensure(CACHE) / f"{field}.csv.gz"
     if path.exists():
         return pd.read_csv(path)
+    if backend == "auto":
+        backend = "hats" if (np.isfinite(density) and density > DENSE_FOR_API) else "api"
     if backend == "api":
-        tiles = tile_centres(ra, dec, radius_deg, tile)
-        tile_r = radius_deg if len(tiles) == 1 else tile
-        parts = [_query(tr, td, tile_r)[KEEP] for tr, td in tiles]
-        df = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=KEEP)
-    elif backend == "hats":
+        try:
+            tiles = tile_centres(ra, dec, radius_deg, tile)
+            tile_r = radius_deg if len(tiles) == 1 else tile
+            parts = [_query(tr, td, tile_r, retries=2, timeout=300) for tr, td in tiles]
+            df = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=KEEP)
+            df = df.drop_duplicates(["oid", "mjd", "filtercode"])
+            df = good_epochs_filter(df)
+        except (requests.RequestException, RuntimeError):
+            backend = "hats"
+    if backend == "hats":
         df = _hats_cone(ra, dec, radius_deg)
-    else:
+    elif backend != "api":
         raise ValueError(backend)
     (CACHE / f"{field}.backend").write_text(backend)
     df = df.drop_duplicates(["oid", "mjd", "filtercode"])
     if len(df):
         sep = np.hypot((df["ra"] - ra) * np.cos(np.radians(dec)), df["dec"] - dec)
         df = df[sep <= radius_deg]
-    df = df[df["catflags"] == 0].drop(columns="catflags")
+    df = df.drop(columns="catflags")
     df.to_csv(path, index=False, compression="gzip")
     return df
