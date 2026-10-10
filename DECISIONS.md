@@ -80,3 +80,10 @@ object count than DR24 HATS for the same cone (27 vs 20 objects with ≥ 40 good
 J1023+0038 field). To keep targets, nulls and controls strictly comparable, all fields use
 `lsdb` on `s3://ipac-irsa-ztf/ztf/enhanced/dr24/lc/hats` (heliocentric MJD). Earlier API
 downloads were set aside (`data/ztf_api_superseded/`), not mixed in.
+
+**Update (same evening):** the API/HATS object-count mismatch was a filtering artefact:
+the API applied NOBS_MIN to all epochs server-side, HATS to good epochs. With one shared
+post-filter the backends agree (20/20, 34/34, 17/18 objects; identical rows). Fields now
+use the API when sparse (< 20,000 Gaia sources/deg²) and HATS when dense or when the API
+fails; each field's backend is recorded. Time columns differ by ≤ 8 min (MJD vs HJD), which
+does not matter within a field.
