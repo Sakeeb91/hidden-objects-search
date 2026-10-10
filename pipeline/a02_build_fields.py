@@ -27,6 +27,8 @@ NULL_CLEARANCE_DEG = 0.3      # beyond both ellipses' semi-major axes
 DEC_MIN = -28.0
 CONTROL_GMAG_MAX = 20.0       # when SpiderCat lists g; otherwise a Gaia DR3 match is required
 CONTROL_A95_MAX = 0.2
+GLAT_MIN = 10.0               # Galactic-plane fields are too dense for the IRSA API;
+                              # applied identically to targets, nulls and controls
 
 
 def null_fields(targets: pd.DataFrame, cat: pd.DataFrame, rng) -> pd.DataFrame:
@@ -41,7 +43,7 @@ def null_fields(targets: pd.DataFrame, cat: pd.DataFrame, rng) -> pd.DataFrame:
                 raise RuntimeError(f"could not place null fields for {t.name}")
             c = c0.directional_offset_by(rng.uniform(0, 360) * u.deg,
                                          rng.uniform(*NULL_OFFSET_DEG) * u.deg)
-            if c.dec.deg <= DEC_MIN:
+            if c.dec.deg <= DEC_MIN or abs(c.galactic.b.deg) <= GLAT_MIN:
                 continue
             sep = c.separation(allsrc).deg
             if np.any(sep < cat["a95"].fillna(0.2).to_numpy() + t.a95 + NULL_CLEARANCE_DEG):
@@ -59,7 +61,7 @@ def control_fields(cat: pd.DataFrame) -> pd.DataFrame:
     sc = sc[(sc["fermi_name"] != "") & sc["pb_h"].notna() & (sc["dec"] > DEC_MIN)
             & sc["has_gaia"] & bright]
     m = sc.merge(cat, left_on="fermi_name", right_on="name", suffixes=("_psr", ""))
-    m = m[m["a95"] <= CONTROL_A95_MAX]
+    m = m[(m["a95"] <= CONTROL_A95_MAX) & (m["glat"].abs() > GLAT_MIN)]
     return pd.DataFrame({
         "field": "ctrl_" + m["Name"].str.replace("PSR_", ""), "kind": "control",
         "parent": m["name"], "ra": m["ra"], "dec": m["dec"], "a95": m["a95"],
@@ -73,6 +75,10 @@ def main():
     cat = fermi.load_4fgl()
     sel = pd.read_csv(RESULTS / "trackA" / "a01_targets.csv")
     sel = sel[sel["selected"]]
+    deferred = sel[sel["glat"].abs() <= GLAT_MIN]
+    if len(deferred):
+        print("deferred (|b| <= %.0f):" % GLAT_MIN, ", ".join(deferred["name"]))
+    sel = sel[sel["glat"].abs() > GLAT_MIN]
     targets = pd.DataFrame({"field": "tgt_" + sel["name"].str.replace("4FGL ", ""),
                             "kind": "target", "parent": sel["name"], "ra": sel["ra"],
                             "dec": sel["dec"], "a95": sel["a95"], "b95": sel["b95"],

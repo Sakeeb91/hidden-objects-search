@@ -47,3 +47,11 @@ yearly sidebands of the daily aliases, and score each source by the summed −lo
 Baluev false-alarm probability across bands (accounts for point counts). The companion
 then ranks 1st. Controls were used to choose the *form* of the score only; detection
 **thresholds will be set from the null fields alone**, before targets are inspected.
+
+## 2026-10-09 — Galactic latitude cut |b| > 10° for the pilot
+
+Plane fields (cones up to 0.2° at |b| < 10°) were too dense for the IRSA light-curve
+API (a single field ran > 10 min without finishing). Applied |b| > 10° identically to
+targets, null positions and controls. Deferred targets: 4FGL J1915.7−0846,
+J0705.0+1331, J1745.0−1953 (to revisit with a TAP pre-selection of ZTF objects).
+Also added NOBS_MIN = 40 server-side (objects sparser than the search minimum).
