@@ -62,7 +62,7 @@ def screen(row, gaia) -> dict:
     kills = []
     if row.dur_ratio > DUR_RATIO_MAX:
         kills.append("K1:too_long")
-    g = gaia.get(int(row.GAIA)) if np.isfinite(row.GAIA) else None
+    g = gaia.get(int(row.GAIA)) if pd.notna(row.GAIA) else None
     if g is None:
         out["gaia"] = "no_match"
     else:

@@ -30,11 +30,11 @@ def fetch_url(url: str, dest: Path, timeout=120) -> Path:
     return dest
 
 
-def cached_frame(name: str, key_parts, builder) -> pd.DataFrame:
+def cached_frame(name: str, key_parts, builder, dtype=None) -> pd.DataFrame:
     """Return a cached DataFrame, building it with builder() on first use."""
     path = ensure(CACHE / name) / f"{_key(*key_parts)}.csv"
     if path.exists():
-        return pd.read_csv(path)
+        return pd.read_csv(path, dtype=dtype)
     df = builder()
     df.to_csv(path, index=False)
     return df
@@ -51,9 +51,11 @@ def tic_rows(tic_ids) -> pd.DataFrame:
         cols = ["ID", "ra", "dec", "GAIA", "Tmag", "mass", "rad", "Teff", "d", "contratio"]
         return tab[cols].to_pandas()
 
-    df = cached_frame("tic", ids, build)
-    df["ID"] = pd.to_numeric(df["ID"]).astype("int64")
-    df["GAIA"] = pd.to_numeric(df["GAIA"], errors="coerce")  # DR2 id; NaN when absent
+    # Read ids as text: a blank would otherwise make pandas parse 19-digit ids as lossy floats
+    df = cached_frame("tic", ids, build, dtype={"ID": str, "GAIA": str})
+    df["ID"] = df["ID"].map(int).astype("int64")
+    df["GAIA"] = pd.array([int(g) if isinstance(g, str) and g.strip().isdigit() else pd.NA
+                           for g in df["GAIA"]], dtype="Int64")
     if len(df) != len(ids):
         missing = set(ids) - set(df["ID"].astype(int))
         raise LookupError(f"TIC query returned {len(df)}/{len(ids)} rows; missing {sorted(missing)[:5]}")

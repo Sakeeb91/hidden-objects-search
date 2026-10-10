@@ -32,8 +32,9 @@ def test_too_few_rv_epochs_is_insufficient_not_a_pass_or_kill():
     assert out["gaia"] == "rv_insufficient" and out["verdict"] == "not_excluded"
 
 
-def test_missing_gaia_match_is_recorded():
-    out = b01.screen(row(gaia_id=np.nan), {})
+@pytest.mark.parametrize("missing", [np.nan, None])
+def test_missing_gaia_match_is_recorded(missing):
+    out = b01.screen(row(gaia_id=missing), {})
     assert out["gaia"] == "no_match"
 
 
