@@ -34,3 +34,10 @@ def spidercat() -> pd.DataFrame:
     df["fermi_name"] = np.where(fermi != "", "4FGL " + fermi, "")
     df["has_gaia"] = df["GaiaDR3"].notna() & (df["GaiaDR3"].astype(str).str.strip() != "")
     return df
+
+
+def lu2024() -> pd.DataFrame:
+    """Lu et al. 2024 (arXiv:2412.11616) Table 4 spider candidates (DR3 + ZTF search)."""
+    from hos.paths import DOCS
+
+    return pd.read_csv(DOCS / "references" / "lu2024_candidates.csv", comment="#")
