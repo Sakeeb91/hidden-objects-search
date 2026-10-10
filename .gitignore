@@ -1,0 +1,28 @@
+# Environments
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Secrets
+.env
+.env.*
+*.key
+
+# Data and caches (re-fetchable from public archives)
+data/
+*.fits
+*.fits.gz
+*.h5
+*.parquet
+.astropy/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local-only notes
+*_private.md
