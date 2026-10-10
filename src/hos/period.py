@@ -14,8 +14,11 @@ from scipy.spatial import cKDTree
 
 MATCH_ARCSEC = 1.5
 MIN_POINTS = 40
-F_MIN, F_MAX = 1 / 2.0, 1 / 0.05      # periods 1.2 h - 2 d (cycles per day)
+F_MIN, F_MAX = 1 / 2.0, 25.0          # periods 0.96 h - 2 d (cycles per day); the
+                                      # ceiling covers P/2 of the shortest (2 h) spiders
 OVERSAMPLE = 5
+GRID_BASELINE_D = 2700.0              # ONE grid for every search (production, controls,
+                                      # injections): ZTF spans ~2018-2025
 ALIAS_HALFWIDTH = 0.004               # c/d masked around each alias
 _N = np.arange(1, 21)
 ALIASES = np.concatenate([
@@ -47,8 +50,9 @@ def group_sources(df: pd.DataFrame) -> pd.DataFrame:
     return df.join(src, on="oid")
 
 
-def frequency_grid(baseline_d: float) -> np.ndarray:
-    """Regular grid (required by the fast Lomb-Scargle); aliases are masked afterwards."""
+def frequency_grid(baseline_d: float = GRID_BASELINE_D) -> np.ndarray:
+    """Regular grid (required by the fast Lomb-Scargle); aliases are masked afterwards.
+    Production and injection searches must both use the default (review 2)."""
     df = 1 / (OVERSAMPLE * max(baseline_d, 30.0))
     return np.arange(F_MIN, F_MAX, df)
 
