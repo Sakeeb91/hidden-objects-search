@@ -34,7 +34,10 @@ def cached_frame(name: str, key_parts, builder, dtype=None) -> pd.DataFrame:
     """Return a cached DataFrame, building it with builder() on first use."""
     path = ensure(CACHE / name) / f"{_key(*key_parts)}.csv"
     if path.exists():
-        return pd.read_csv(path, dtype=dtype)
+        try:
+            return pd.read_csv(path, dtype=dtype)
+        except pd.errors.EmptyDataError:  # cached "no rows, no columns" answer
+            return pd.DataFrame()
     df = builder()
     df.to_csv(path, index=False)
     return df

@@ -34,3 +34,11 @@ def test_plain_pandas_would_have_lost_the_old_null_kind(tmp_path):
     p = tmp_path / "f.csv"
     pd.DataFrame({"kind": ["null"]}).to_csv(p, index=False)
     assert pd.read_csv(p)["kind"].isna().all()
+
+
+def test_cached_empty_answer_round_trips(tmp_path, monkeypatch):
+    from hos import archives as A
+    monkeypatch.setattr(A, "CACHE", tmp_path)
+    first = A.cached_frame("t", ["k"], lambda: pd.DataFrame())
+    second = A.cached_frame("t", ["k"], lambda: (_ for _ in ()).throw(AssertionError("refetched")))
+    assert first.empty and second.empty
