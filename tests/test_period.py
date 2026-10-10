@@ -61,3 +61,16 @@ def test_fitted_amplitude_is_not_noise_biased_for_faint_noise():
     g = synth(amp=0.0, noise=0.15, n=200)
     out = P.search_source(g, P.frequency_grid(2400))
     assert out["g_amp_snr"] < 5
+
+
+def test_coherent_sinusoid_is_significant_in_both_halves():
+    out = P.search_source(synth(amp=0.1), P.frequency_grid(2400))
+    assert out["coherence"] > 5
+
+
+def test_signal_present_in_only_one_half_is_not_coherent():
+    g = synth(amp=0.0, noise=0.03)
+    late = g["mjd"] > g["mjd"].median()
+    g.loc[late, "mag"] += 0.15 * np.sin(2 * np.pi * g.loc[late, "mjd"] / 0.3)
+    out = P.search_source(g, P.frequency_grid(2400))
+    assert out["coherence"] < 2

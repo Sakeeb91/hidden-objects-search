@@ -98,7 +98,7 @@ def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
     # Significance at the shared best frequency, summed over bands (independent data)
     score = sum(band_log_fap(t, y, dy, pw[i]) for t, y, dy, pw in series.values())
     out = {"n_bands": len(bands), "bands": ",".join(sorted(bands)), "power": float(mean[i]),
-           "score": float(score),
+           "score": float(score), "coherence": half_coherence(series, f_best),
            "period_d": float(1 / f_best), "bands_agree": bool(agree),
            "ra": float(g["ra"].median()), "dec": float(g["dec"].median()),
            "n_points": int(len(g))}
@@ -128,6 +128,22 @@ def sine_fit(t, y, dy, period):
     g = np.array([a, b]) / max(amp, 1e-9)
     err = float(np.sqrt(max(g @ cov[1:, 1:] @ g, 1e-12)))
     return amp, err
+
+
+def half_coherence(series: dict, f_best: float) -> float:
+    """Persistence test against stochastic variability (review 1, M3: blazars flicker but
+    are not strictly periodic). Split every band's light curve at its median time; in each
+    half, sum over bands the -log10 Baluev FAP of the power AT f_best. Return the smaller
+    half's value: a coherent orbit is significant in both halves, red noise rarely is."""
+    halves = [0.0, 0.0]
+    for t, y, dy, _ in series.values():
+        cut = np.median(t)
+        for k, m in enumerate((t < cut, t >= cut)):
+            if m.sum() < MIN_POINTS // 2:
+                continue
+            pw = LombScargle(t[m], y[m], dy[m]).power(np.array([f_best]))[0]
+            halves[k] += band_log_fap(t[m], y[m], dy[m], pw)
+    return float(min(halves))
 
 
 def fold_stats(b: pd.DataFrame, period: float, prefix: str) -> dict:
