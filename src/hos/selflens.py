@@ -89,3 +89,39 @@ def ellipsoidal_amplitude(m_star, m_comp, r_star, period_d, alpha=1.0):
     """Approximate ellipsoidal semi-amplitude ~ alpha (M2/M1) (R*/a)^3 at i = 90 deg."""
     a = semi_major_axis_m(period_d, m_star + m_comp)
     return float(alpha * (m_comp / m_star) * (r_star * RSUN / a) ** 3)
+
+
+def rv_range_cdf(r: float, n: int) -> float:
+    """P(range of n circular-orbit RVs at independent uniform phases < r K), no clipping.
+
+    With x = sin(phi): n * int f(x) [F(min(1, x + r)) - F(x)]^(n-1) dx, f the arcsine
+    density. Substituting x = sin(theta) removes the endpoint singularities.
+    (Review 2, Codex GPT-6-Astra.)"""
+    from scipy.integrate import quad
+
+    if n < 2:
+        return 1.0
+    if r >= 2:
+        return 1.0
+
+    def integrand(theta):
+        x = np.sin(theta)
+        upper = 0.5 + np.arcsin(min(1.0, x + r)) / np.pi
+        return (upper - (0.5 + theta / np.pi)) ** (n - 1)
+
+    val, _ = quad(integrand, -np.pi / 2, np.pi / 2, limit=200)
+    return float(min(1.0, n / np.pi * val))
+
+
+def rv_range_cdf_clipped(r: float, n: int, nsim=400_000, seed=0) -> float:
+    """Monte Carlo version with Gaia DR3's robust-amplitude outlier rule: drop epochs
+    outside [Q1 - 3 IQR, Q3 + 3 IQR] before taking max - min (numpy linear percentiles)."""
+    rng = np.random.default_rng(seed)
+    v = np.sin(rng.uniform(0, 2 * np.pi, (nsim, n)))
+    q1, q3 = np.percentile(v, [25, 75], axis=1)
+    iqr = q3 - q1
+    lo, hi = (q1 - 3 * iqr)[:, None], (q3 + 3 * iqr)[:, None]
+    keep = (v >= lo) & (v <= hi)
+    vmax = np.where(keep, v, -np.inf).max(axis=1)
+    vmin = np.where(keep, v, np.inf).min(axis=1)
+    return float(((vmax - vmin) < r).mean())

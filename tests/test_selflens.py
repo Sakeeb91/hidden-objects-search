@@ -45,3 +45,21 @@ def test_heavier_wd_can_flip_sign_of_net_signal():
     # quick look must not treat as a lensing pulse.
     assert sl.net_amplitude(0.3, 0.7, 0.65, 1.0, kind="wd") < 0
     assert sl.net_amplitude(1.4, 0.7, 0.65, 1.0, kind="ns") > 0
+
+
+@pytest.mark.parametrize("n,expected", [(5, 0.08870), (6, 0.04358), (7, 0.02126), (10, 0.002457)])
+def test_rv_range_cdf_matches_independent_audit(n, expected):
+    # Values derived independently by review 2 (Codex) by quadrature and simulation
+    assert sl.rv_range_cdf(1.0, n) == pytest.approx(expected, rel=2e-3)
+
+
+def test_rv_range_cdf_agrees_with_simulation_and_is_monotone():
+    rng = np.random.default_rng(3)
+    v = np.sin(rng.uniform(0, 2 * np.pi, (300_000, 6)))
+    sim = (np.ptp(v, axis=1) < 0.5).mean()
+    assert sl.rv_range_cdf(0.5, 6) == pytest.approx(sim, abs=2e-3)
+    assert sl.rv_range_cdf(0.2, 6) < sl.rv_range_cdf(0.5, 6) < sl.rv_range_cdf(1.0, 6)
+
+
+def test_clipping_makes_false_exclusion_more_likely():
+    assert sl.rv_range_cdf_clipped(1.0, 5, nsim=200_000) > sl.rv_range_cdf(1.0, 5)
