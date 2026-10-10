@@ -15,7 +15,9 @@ import json
 
 import numpy as np
 import pandas as pd
+from astropy.coordinates import SkyCoord
 
+from hos import xray
 from hos.paths import DATA, RESULTS
 from hos.sky import in_ellipse, sep_arcsec
 
@@ -48,6 +50,16 @@ def spider_like(d: pd.DataFrame, s_min=S_MIN) -> pd.Series:
             & (amp >= AMP_MIN) & (d["score"] >= s_min))
 
 
+def add_xray(d: pd.DataFrame) -> pd.DataFrame:
+    """Uniform-survey X-ray match for each row (identical for every field kind)."""
+    if d.empty:
+        return d.assign(xray_uniform=pd.Series(dtype=bool), xray_any=pd.Series(dtype=bool))
+    glon = SkyCoord(d["ra"].to_numpy(), d["dec"].to_numpy(), unit="deg").galactic.l.deg
+    m = [xray.matches(r, de, gl) for r, de, gl in zip(d["ra"], d["dec"], glon)]
+    return d.assign(xray_uniform=[x["uniform_match"] for x in m],
+                    xray_any=[x["any_match"] for x in m])
+
+
 def period_match(p, true_p, tol=0.01):
     return any(abs(p / (true_p * k) - 1) < tol for k in (1.0, 0.5, 2.0))
 
@@ -63,6 +75,12 @@ def main():
                  .reindex(null_fields.field, fill_value=0) for s in S_LEVELS}
     lam = {str(s): {"mean_per_ellipse": float(v.mean()), "frac_fields_with_any": float((v > 0).mean())}
            for s, v in per_field.items()}
+    # Compound statistic: spider-like AND a uniform-survey X-ray source at the position
+    nsl = add_xray(nd[spider_like(nd)])
+    nx = nsl[nsl["xray_uniform"]].groupby("field").size().reindex(null_fields.field, fill_value=0)
+    lam_x = {"mean_per_ellipse": float(nx.mean()), "n_total": int(nx.sum()),
+             "frac_fields_with_any": float((nx > 0).mean())}
+    nsl.to_csv(RESULTS / "trackA" / "a05_null_spider_like.csv", index=False, float_format="%.7g")
 
     rows = []
     for c in fields[fields.kind == "control"].itertuples():
@@ -80,9 +98,12 @@ def main():
             ranked = cd[cd.inside].sort_values("score", ascending=False).reset_index()
             rank = int(np.flatnonzero(ranked["index"] == sep.idxmin())[0] + 1) if m.inside else -1
             sl = bool(spider_like(cd.loc[[sep.idxmin()]]).iloc[0])
+            xr = add_xray(cd.loc[[sep.idxmin()]])
             rec.update({"status": "found", "score": float(m.score), "period_d": float(m.period_d),
                         "period_ok": period_match(m.period_d, c.true_pb_h / 24),
                         "rank_by_score": rank, "spider_like": sl,
+                        "xray_uniform": bool(xr["xray_uniform"].iloc[0]),
+                        "xray_any": bool(xr["xray_any"].iloc[0]),
                         "n_spider_like_in_field": int(spider_like(cd).sum())})
         rows.append(rec)
     ctrl = pd.DataFrame(rows)
@@ -94,6 +115,7 @@ def main():
                  "s_min": S_MIN, "bands_agree": True, "inside_95pct_ellipse": True},
         "n_null_fields": int(len(null_fields)),
         "null_rate_by_score": lam,
+        "null_rate_spider_like_with_uniform_xray": lam_x,
         "controls": {"n": int(len(ctrl)),
                      "found": int((ctrl.status == "found").sum()),
                      "period_ok": int(ctrl.get("period_ok", pd.Series(dtype=bool)).fillna(False).sum()),
