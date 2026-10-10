@@ -6,7 +6,9 @@ unmodified in git, so thresholds provably predate looking at targets.
 For each target ellipse: spider-like periodic sources (same cuts as a05), uniform and
 targeted X-ray matches, Gaia DR3 astrometry, and a novelty check (SpiderCat, Lu+2024, SIMBAD,
 VSX, ZTF periodic variables of Chen et al. 2020) with the date of the check. Each field's
-count is compared with the null background rate via a Poisson tail probability.
+count is compared with its own
+three matched off-source fields (exact conditional binomial) and with all off-source counts
+(negative-binomial posterior predictive), Holm-corrected across targets.
 
 Writes results/trackA/a06_candidates.csv and a06_fields.csv.
 Usage: uv run python pipeline/a06_targets.py
@@ -18,11 +20,10 @@ import subprocess
 import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
-from scipy.stats import poisson
 
 from a05_calibrate import add_xray, code_hashes, cuts, load, spider_like
 from hos import archives as A
-from hos import known
+from hos import known, stats
 from hos.fields import read_fields
 from hos.paths import RESULTS, ROOT
 from hos.sky import sep_arcsec
@@ -104,8 +105,6 @@ def main():
     assert_frozen_committed()
     frozen = json.loads(FROZEN.read_text())
     assert_code_matches(frozen)
-    lam = frozen["null_rate_by_score"][str(frozen["cuts"]["s_min"])]["mean_per_ellipse"]
-    lam_x = frozen["null_rate_spider_like_with_uniform_xray"]["mean_per_ellipse"]
 
     fields = read_fields()
     tf = fields[fields.kind == "target"]
@@ -121,19 +120,32 @@ def main():
     cand = cand.sort_values(["xray_uniform", "score"], ascending=False)
     cand.to_csv(RESULTS / "trackA" / "a06_candidates.csv", index=False, float_format="%.7g")
 
+    counts = frozen["null_counts"]
+    n_null_fields = len(counts)
     per = []
     for f in tf.itertuples():
         c = cand[cand.field == f.field]
-        n, nx = len(c), int(c["xray_uniform"].sum()) if len(c) else 0
-        per.append({"field": f.field, "n_spider_like": n, "p_ge_n": float(poisson.sf(n - 1, lam)) if n else 1.0,
-                    "n_with_uniform_xray": nx,
-                    "p_ge_nx": float(poisson.sf(nx - 1, lam_x)) if nx else 1.0})
+        mine = [v for v in counts.values() if v["parent"] == f.parent]
+        xr = c["xray_uniform"].to_numpy(bool) if len(c) else np.array([], bool)
+        rec = {"field": f.field, "n_matched_nulls": len(mine)}
+        for level, mask in (("spider_like", np.ones(len(c), bool)), ("spider_like_xray", xr)):
+            y = int(mask.sum())
+            c_local = sum(v[level] for v in mine)
+            c_total = sum(v[level] for v in counts.values())
+            rec.update({f"{level}_n": y, f"{level}_matched_null_n": c_local,
+                        f"{level}_p_matched": stats.matched_binomial_p(y, c_local, len(mine)),
+                        f"{level}_p_pooled_nb": stats.nb_predictive_p(y, c_total, n_null_fields)})
+        per.append(rec)
     per = pd.DataFrame(per)
+    for level in ("spider_like", "spider_like_xray"):
+        for kind in ("matched", "pooled_nb"):
+            per[f"{level}_p_{kind}_holm"] = stats.holm(per[f"{level}_p_{kind}"])
     per.to_csv(RESULTS / "trackA" / "a06_fields.csv", index=False, float_format="%.4g")
-    tot, tot_x = per.n_spider_like.sum(), per.n_with_uniform_xray.sum()
-    print(f"lambda per ellipse = {lam:.3f} (spider-like), {lam_x:.3f} (+X-ray)")
-    print(f"targets: {tot} spider-like (expected {lam * len(tf):.1f}), "
-          f"{tot_x} with uniform X-ray (expected {lam_x * len(tf):.2f})")
+    tot, tot_x = per["spider_like_n"].sum(), per["spider_like_xray_n"].sum()
+    exp = sum(v["spider_like"] for v in counts.values()) * len(tf) / n_null_fields
+    exp_x = sum(v["spider_like_xray"] for v in counts.values()) * len(tf) / n_null_fields
+    print(f"targets: {tot} spider-like (null-scaled expectation {exp:.1f}); "
+          f"{tot_x} with uniform X-ray (expectation {exp_x:.2f})")
     print(per.to_string(index=False))
     cols = ["field", "ra", "dec", "period_d", "score", "g_mag", "g_amp", "xray_uniform", "xray_any",
             "known", "simbad", "vsx", "gaia_parallax", "gaia_bp_rp"]
