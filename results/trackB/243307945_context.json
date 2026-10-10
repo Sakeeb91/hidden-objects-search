@@ -1,0 +1,120 @@
+{
+  "tic": 243307945,
+  "signal": 3,
+  "period_d": 6.26975,
+  "amp_ppm": 101.741,
+  "m_star": 0.76,
+  "gaia": {
+    "source_id": 6112657761310611712,
+    "phot_g_mean_mag": 9.486869,
+    "bp_rp": 1.2221994,
+    "parallax": 17.326238070155878,
+    "ruwe": 2.078775,
+    "astrometric_excess_noise": 0.2557995,
+    "astrometric_excess_noise_sig": 76.14759,
+    "ipd_frac_multi_peak": 0.0,
+    "ipd_gof_harmonic_amplitude": 0.021452956,
+    "radial_velocity": NaN,
+    "rv_nb_transits": NaN,
+    "non_single_star": 0.0,
+    "ra": 204.2887791146403,
+    "dec": -42.34932221842548
+  },
+  "neighbours_30arcsec": [
+    {
+      "source_id": 6112657761303139200,
+      "phot_g_mean_mag": 15.480167,
+      "parallax": 0.5622531393418272,
+      "sep_arcsec": 6.834247436125226,
+      "flux_ratio": 0.004005721947862517
+    },
+    {
+      "source_id": 6112657688291944448,
+      "phot_g_mean_mag": 17.942411,
+      "parallax": 0.0985208950459536,
+      "sep_arcsec": 12.778715480618535,
+      "flux_ratio": 0.0004147469490852104
+    },
+    {
+      "source_id": 6112657692588244224,
+      "phot_g_mean_mag": 20.588387,
+      "parallax": -0.9308155862931138,
+      "sep_arcsec": 13.86872188353473,
+      "flux_ratio": 3.625707792708545e-05
+    },
+    {
+      "source_id": 6112657692592064128,
+      "phot_g_mean_mag": 20.060932,
+      "parallax": 1.046158108484813,
+      "sep_arcsec": 20.351940392529304,
+      "flux_ratio": 5.8935205201052484e-05
+    },
+    {
+      "source_id": 6112657791370870400,
+      "phot_g_mean_mag": 20.179302,
+      "parallax": 0.9733809067081972,
+      "sep_arcsec": 23.724189760222114,
+      "flux_ratio": 5.284778627576373e-05
+    },
+    {
+      "source_id": 6112657692588242176,
+      "phot_g_mean_mag": 20.255577,
+      "parallax": -0.877130699725214,
+      "sep_arcsec": 26.05528365871221,
+      "flux_ratio": 4.926253994209378e-05
+    },
+    {
+      "source_id": 6112657795667462656,
+      "phot_g_mean_mag": 21.05517,
+      "parallax": NaN,
+      "sep_arcsec": 26.62882590474598,
+      "flux_ratio": 2.3587374366760746e-05
+    },
+    {
+      "source_id": 6112657795671280640,
+      "phot_g_mean_mag": 17.31014,
+      "parallax": 0.6757035560966235,
+      "sep_arcsec": 29.713348429104546,
+      "flux_ratio": 0.0007424916944907327
+    }
+  ],
+  "xp_rv_kms": -84.464,
+  "xp_rv_err_kms": 329.642,
+  "source": "Gaia XP spectra RVs, VizieR J/A+A/684/A29",
+  "k_scenarios": [
+    {
+      "r_star": 0.85,
+      "m_lens_pure": 0.2970059995133795,
+      "K_pure_kms": 33.048830764006716,
+      "m_lens_wd": 0.710110793134261,
+      "K_wd_kms": 63.4164482371659
+    },
+    {
+      "r_star": 0.92,
+      "m_lens_pure": 0.343030693504506,
+      "K_pure_kms": 37.100841623165145,
+      "m_lens_wd": 0.7318822129151538,
+      "K_wd_kms": 64.72330420107386
+    },
+    {
+      "r_star": 1.01,
+      "m_lens_pure": 0.40586354253747803,
+      "K_pure_kms": 42.30490646227997,
+      "m_lens_wd": 0.7628758156020092,
+      "K_wd_kms": 66.54570534117053
+    }
+  ],
+  "k_min_kms": 33.048830764006716,
+  "rv_test": {
+    "decision_ptp_kms": 20.0,
+    "rv_noise_kms": 1.0,
+    "miss_probability_at_k_min": {
+      "2": 0.440325,
+      "3": 0.16463,
+      "4": 0.05751,
+      "6": 0.00702,
+      "8": 0.00087
+    },
+    "epochs_for_miss_below_1pct": 6
+  }
+}
