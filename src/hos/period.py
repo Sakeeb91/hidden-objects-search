@@ -17,7 +17,12 @@ MIN_POINTS = 40
 F_MIN, F_MAX = 1 / 2.0, 1 / 0.05      # periods 1.2 h - 2 d (cycles per day)
 OVERSAMPLE = 5
 ALIAS_HALFWIDTH = 0.004               # c/d masked around each alias
-ALIASES = np.concatenate([np.arange(1, 21) * 1.0, np.arange(1, 21) * 1.0027379])
+_N = np.arange(1, 21)
+ALIASES = np.concatenate([
+    _N * 1.0, _N * 1.0027379,                       # solar and sidereal day
+    _N + 1 / 29.53, _N - 1 / 29.53,                 # lunar-month sidebands
+    _N + 1 / 365.25, _N - 1 / 365.25,               # yearly sidebands
+])
 BAND_AGREE = 0.002                    # relative frequency agreement between bands
 
 
@@ -60,9 +65,17 @@ def band_power(t, y, dy, freq):
     return LombScargle(t, y, dy).power(freq, method="fast")
 
 
+def band_log_fap(t, y, dy, power) -> float:
+    """-log10 of the Baluev white-noise false-alarm probability of a peak of this power
+    over the searched band. Accounts for the number of points; floored at 1e-300."""
+    fap = LombScargle(t, y, dy).false_alarm_probability(
+        power, method="baluev", minimum_frequency=F_MIN, maximum_frequency=F_MAX)
+    return float(-np.log10(max(fap, 1e-300)))
+
+
 def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
     """Period search for one merged source. Returns None if too few points."""
-    powers, bands, best = [], [], {}
+    powers, bands, best, series = [], [], {}, {}
     ok = alias_mask(freq)
     for band, b in g.groupby("filtercode"):
         if len(b) < MIN_POINTS:
@@ -73,6 +86,7 @@ def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
         p = np.where(ok, p, 0.0)
         powers.append(p)
         bands.append(band)
+        series[band] = (b["mjd"].to_numpy(), y.to_numpy(), b["magerr"].to_numpy(), p)
         best[band] = freq[np.argmax(p)]
     if not powers:
         return None
@@ -81,7 +95,10 @@ def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
     f_best = freq[i]
     agree = (len(best) < 2) or (abs(best.get("zg", f_best) - best.get("zr", f_best))
                                 / f_best < BAND_AGREE)
+    # Significance at the shared best frequency, summed over bands (independent data)
+    score = sum(band_log_fap(t, y, dy, pw[i]) for t, y, dy, pw in series.values())
     out = {"n_bands": len(bands), "bands": ",".join(sorted(bands)), "power": float(mean[i]),
+           "score": float(score),
            "period_d": float(1 / f_best), "bands_agree": bool(agree),
            "ra": float(g["ra"].median()), "dec": float(g["dec"].median()),
            "n_points": int(len(g))}
