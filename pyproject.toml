@@ -13,6 +13,7 @@ dependencies = [
     "requests>=2.32",
     "lightkurve>=2.5",
     "wotan>=1.10",
+    "scikit-learn>=1.5",
 ]
 
 [dependency-groups]
