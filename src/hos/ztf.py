@@ -10,6 +10,7 @@ from hos.paths import DATA, ensure
 API = "https://irsa.ipac.caltech.edu/cgi-bin/ZTF/nph_light_curves"
 KEEP = ["oid", "mjd", "mag", "magerr", "catflags", "filtercode", "ra", "dec", "limitmag"]
 CACHE = DATA / "ztf"
+NOBS_MIN = 40  # server-side: skip objects too sparse for the period search
 
 
 def cone(ra: float, dec: float, radius_deg: float, field: str, retries=4,
@@ -23,7 +24,7 @@ def cone(ra: float, dec: float, radius_deg: float, field: str, retries=4,
     if path.exists():
         return pd.read_csv(path)
     params = {"POS": f"CIRCLE {ra:.6f} {dec:.6f} {radius_deg:.5f}", "BANDNAME": "g,r",
-              "FORMAT": "csv", "BAD_CATFLAGS_MASK": 32768}
+              "FORMAT": "csv", "BAD_CATFLAGS_MASK": 32768, "NOBS_MIN": NOBS_MIN}
     for attempt in range(retries):
         try:
             r = requests.get(API, params=params, timeout=timeout)
