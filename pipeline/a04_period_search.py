@@ -31,7 +31,7 @@ def run_field(field: str) -> dict:
         return {"field": field, "n_sources": 0, "status": "no_ztf_file", "seconds": 0}
     lc = pd.read_csv(raw_path)
     if lc.empty:
-        pd.DataFrame().to_csv(path, index=False)
+        pd.DataFrame(columns=["field", "src"]).to_csv(path, index=False)  # re-readable
         return {"field": field, "n_sources": 0, "status": "empty_field", "seconds": 0}
     lc = P.group_sources(lc)
     freq = P.frequency_grid(float(np.ptp(lc["mjd"])))
@@ -41,7 +41,7 @@ def run_field(field: str) -> dict:
         if r is not None:
             r["src"] = int(src)
             rows.append(r)
-    res = pd.DataFrame(rows)
+    res = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["src"])
     res.insert(0, "field", field)
     res.to_csv(path, index=False, float_format="%.7g")
     return {"field": field, "n_sources": len(res), "status": "ok",
