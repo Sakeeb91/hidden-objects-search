@@ -64,3 +64,11 @@ per deg² at the centre. A dense *target* is removed together with its three off
 fields so every remaining comparison stays matched. Deferred targets: 4FGL J1801.3+0554,
 J1920.5+3652 (in addition to the three |b| < 10° targets). Controls removed: J1705−1903,
 4FGL J1701.8−2226. Retained positions unchanged.
+
+## 2026-10-09 — Band agreement redefined (before freezing)
+
+Review 1 noted that a g/r pair whose peaks differ by an alias is rejected; a control
+(1FGL J0523.5−2529) showed it: g's maximum sat on the daily alias of the true P/2.
+"Bands agree" now means the shared-frequency period is independently significant in
+each band (−log10 Baluev FAP ≥ 2). Controls informed this design choice, as with the
+score form; the detection thresholds are still set only from off-source fields.
