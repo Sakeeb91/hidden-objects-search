@@ -23,7 +23,8 @@ from hos.paths import DATA, RESULTS
 from hos.sky import in_ellipse, sep_arcsec
 
 PERIOD_MIN_D, PERIOD_MAX_D = 1 / 24, 36 / 24
-AMP_MIN = 0.05
+AMP_MIN = 0.05        # fitted peak-to-peak, mag
+AMP_SNR_MIN = 5.0     # fitted semi-amplitude / its error, in the same band
 S_MIN = 5.0
 S_LEVELS = [5.0, 8.0, 12.0, 20.0, 40.0]
 MATCH_ARCSEC = 2.0
@@ -46,9 +47,11 @@ def load(fields: pd.DataFrame) -> pd.DataFrame:
 
 
 def spider_like(d: pd.DataFrame, s_min=S_MIN) -> pd.Series:
-    amp = d.reindex(columns=["g_amp", "r_amp"]).max(axis=1, skipna=True)  # a band may be absent
+    c = d.reindex(columns=["g_amp", "r_amp", "g_amp_snr", "r_amp_snr"])  # a band may be absent
+    band_ok = ((c["g_amp"] >= AMP_MIN) & (c["g_amp_snr"] >= AMP_SNR_MIN)) | \
+              ((c["r_amp"] >= AMP_MIN) & (c["r_amp_snr"] >= AMP_SNR_MIN))
     return (d["inside"] & d["bands_agree"] & d["period_d"].between(PERIOD_MIN_D, PERIOD_MAX_D)
-            & (amp >= AMP_MIN) & (d["score"] >= s_min))
+            & band_ok & (d["score"] >= s_min))
 
 
 def add_xray(d: pd.DataFrame) -> pd.DataFrame:
@@ -115,6 +118,7 @@ def main():
     frozen = {
         "frozen_before_targets": True,
         "cuts": {"period_min_d": PERIOD_MIN_D, "period_max_d": PERIOD_MAX_D, "amp_min_mag": AMP_MIN,
+                 "amp_snr_min": AMP_SNR_MIN,
                  "s_min": S_MIN, "bands_agree": True, "inside_95pct_ellipse": True},
         "n_null_fields": int(len(null_fields)),
         "null_rate_by_score": lam,
