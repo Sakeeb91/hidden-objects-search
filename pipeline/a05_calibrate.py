@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from astropy.coordinates import SkyCoord
 
-from hos import xray
+from hos import stats, xray
 from hos.fields import read_fields
 from hos.paths import DATA, RESULTS, ROOT
 from hos.sky import in_ellipse, sep_arcsec
@@ -118,6 +118,10 @@ def main():
     lam_x = {"mean_per_ellipse": float(nx.mean()), "n_total": int(nx.sum()),
              "frac_fields_with_any": float((nx > 0).mean())}
     nsl.to_csv(RESULTS / "trackA" / "a05_null_spider_like.csv", index=False, float_format="%.7g")
+    n_sl = per_field[S_MIN]
+    null_counts = {f.field: {"parent": f.parent, "spider_like": int(n_sl[f.field]),
+                             "spider_like_xray": int(nx[f.field])}
+                   for f in null_fields.itertuples()}
 
     rows = []
     for c in fields[fields.kind == "control"].itertuples():
@@ -154,6 +158,9 @@ def main():
         "n_null_fields": int(len(null_fields)),
         "null_rate_by_score": lam,
         "null_rate_spider_like_with_uniform_xray": lam_x,
+        "null_counts": null_counts,
+        "dispersion_index": {"spider_like": stats.dispersion_index(n_sl.to_numpy()),
+                             "spider_like_xray": stats.dispersion_index(nx.to_numpy())},
         "controls_independent": control_summary(ctrl[ctrl["independent"]]),
         "controls_all": control_summary(ctrl),
         "control_caveat": "control ellipses are ~7x smaller in area than target ellipses, "
