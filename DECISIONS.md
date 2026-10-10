@@ -87,3 +87,10 @@ post-filter the backends agree (20/20, 34/34, 17/18 objects; identical rows). Fi
 use the API when sparse (< 20,000 Gaia sources/deg²) and HATS when dense or when the API
 fails; each field's backend is recorded. Time columns differ by ≤ 8 min (MJD vs HJD), which
 does not matter within a field.
+
+## 2026-10-09 — Target period tables computed before the freeze, not inspected
+
+To overlap CPU with the download, `a04` runs on every field as its light curves arrive,
+including targets. Target tables live in `data/` (gitignored) and are read only by `a06`,
+which refuses to run until the frozen calibration (cuts + code hashes) is committed.
+No target table is opened or summarised before then.
