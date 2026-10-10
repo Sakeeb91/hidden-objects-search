@@ -109,21 +109,36 @@ def search_source(g: pd.DataFrame, freq: np.ndarray) -> dict | None:
     return out
 
 
-def fold_stats(b: pd.DataFrame, period: float, prefix: str, nbins=20) -> dict:
-    """Median mag, binned peak-to-peak amplitude at P, and minima depth asymmetry at 2P."""
+def sine_fit(t, y, dy, period):
+    """Weighted least-squares fit y = c + a sin + b cos at the period.
+
+    Returns (semi-amplitude, its 1-sigma error). The error is scaled by sqrt(reduced chi2)
+    when the scatter exceeds the quoted errors (ZTF magerr is often underestimated)."""
+    ph = 2 * np.pi * t / period
+    X = np.column_stack([np.ones_like(t), np.sin(ph), np.cos(ph)])
+    w = 1 / np.clip(dy, 1e-3, None)
+    beta, *_ = np.linalg.lstsq(X * w[:, None], y * w, rcond=None)
+    resid = (y - X @ beta) * w
+    dof = max(len(t) - 3, 1)
+    scale = max(np.sum(resid**2) / dof, 1.0)
+    cov = np.linalg.pinv((X * w[:, None]).T @ (X * w[:, None])) * scale
+    a, b = beta[1], beta[2]
+    amp = float(np.hypot(a, b))
+    # propagate to amplitude (delta method); floor avoids division by zero at amp = 0
+    g = np.array([a, b]) / max(amp, 1e-9)
+    err = float(np.sqrt(max(g @ cov[1:, 1:] @ g, 1e-12)))
+    return amp, err
+
+
+def fold_stats(b: pd.DataFrame, period: float, prefix: str) -> dict:
+    """Median mag, fitted peak-to-peak amplitude (2 x semi-amplitude) with its S/N, and
+    minima-depth asymmetry when folded at 2P."""
     y = (b["mag"] - b.groupby("oid")["mag"].transform("median")).to_numpy()
     t = b["mjd"].to_numpy()
-    amp = _binned_ptp(t, y, period, nbins)
+    semi, err = sine_fit(t, y, b["magerr"].to_numpy(), period)
     # At 2P a double-humped (ellipsoidal/contact) curve shows two minima; compare them.
     ph2 = (t / (2 * period)) % 1
     m1, m2 = np.nanmedian(y[ph2 < 0.5]), np.nanmedian(y[ph2 >= 0.5])
-    return {f"{prefix}_mag": float(np.median(b["mag"])), f"{prefix}_amp": float(amp),
-            f"{prefix}_half_diff": float(abs(m1 - m2))}
+    return {f"{prefix}_mag": float(np.median(b["mag"])), f"{prefix}_amp": 2 * semi,
+            f"{prefix}_amp_snr": semi / err, f"{prefix}_half_diff": float(abs(m1 - m2))}
 
-
-def _binned_ptp(t, y, period, nbins):
-    ph = (t / period) % 1
-    idx = np.minimum((ph * nbins).astype(int), nbins - 1)
-    med = np.array([np.median(y[idx == k]) if np.any(idx == k) else np.nan
-                    for k in range(nbins)])
-    return np.nanmax(med) - np.nanmin(med) if np.isfinite(med).sum() >= nbins // 2 else np.nan

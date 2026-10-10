@@ -21,7 +21,8 @@ def test_recovers_injected_period_in_both_bands():
     out = P.search_source(g, freq)
     assert abs(out["period_d"] - 0.3) / 0.3 < 1e-3
     assert out["bands_agree"] and out["n_bands"] == 2
-    assert 0.3 < out["g_amp"] < 0.5
+    assert 0.35 < out["g_amp"] < 0.45          # fitted peak-to-peak = 2 x 0.2
+    assert out["g_amp_snr"] > 20
 
 
 def test_pure_noise_has_low_power():
@@ -53,3 +54,10 @@ def test_grouping_merges_close_ids_and_separates_far_ones():
     b["oid"] += 10
     out = P.group_sources(pd.concat([a, b]))
     assert out.groupby("src")["oid"].nunique().sort_values().tolist() == [2, 2]
+
+
+def test_fitted_amplitude_is_not_noise_biased_for_faint_noise():
+    # Review 1 M5: binned max-min gave ~0.14 mag on pure noise; the fit must not.
+    g = synth(amp=0.0, noise=0.15, n=200)
+    out = P.search_source(g, P.frequency_grid(2400))
+    assert out["g_amp_snr"] < 5
