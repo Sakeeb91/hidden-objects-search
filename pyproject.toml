@@ -14,6 +14,8 @@ dependencies = [
     "lightkurve>=2.5",
     "wotan>=1.10",
     "scikit-learn>=1.5",
+    "lsdb>=0.10.4",
+    "s3fs>=2026.9.0",
 ]
 
 [dependency-groups]

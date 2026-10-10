@@ -23,9 +23,12 @@ ORDER = {"control": 0, "offsource": 1, "target": 2}
 def fetch(row):
     t = time.time()
     try:
+        dens = getattr(row, "gaia_density", np.nan)
         df = ztf.cone(row.ra, row.dec, row.a95, row.field,
-                      tile=ztf.tile_for_density(getattr(row, "gaia_density", np.nan)))
+                      tile=ztf.tile_for_density(dens), density=dens)
+        bfile = ztf.CACHE / f"{row.field}.backend"
         return {"field": row.field, "kind": row.kind, "status": "ok",
+                "backend": bfile.read_text() if bfile.exists() else "api",
                 "n_points": len(df), "n_objects": df["oid"].nunique() if len(df) else 0,
                 "seconds": round(time.time() - t, 1)}
     except Exception as e:  # recorded, never silently dropped
