@@ -1,8 +1,8 @@
 """Track A stage 5: calibrate on null and control fields ONLY, then freeze.
 
 Spider-like periodic source (cuts fixed here on physical grounds, not tuned):
-  inside the 95% ellipse; period 2-36 h (SpiderCat orbits are 2-17 h; P/2 ellipsoidal
-  peaks included); bands agree; folded amplitude >= AMP_MIN in some band; score >= S_MIN.
+  inside the 95% ellipse; periodogram peak 1-36 h (SpiderCat orbits are 2-17 h and an
+  ellipsoidal companion peaks at P_orb/2, so the floor is 1 h); bands agree; folded amplitude >= AMP_MIN in some band; score >= S_MIN.
 
 Null fields give the background rate lambda(S): spider-like periodic stars per ellipse
 that have nothing to do with a gamma-ray source. Controls give blind recovery: the rank
@@ -21,7 +21,7 @@ from hos import xray
 from hos.paths import DATA, RESULTS
 from hos.sky import in_ellipse, sep_arcsec
 
-PERIOD_MIN_D, PERIOD_MAX_D = 2 / 24, 36 / 24
+PERIOD_MIN_D, PERIOD_MAX_D = 1 / 24, 36 / 24
 AMP_MIN = 0.05
 S_MIN = 5.0
 S_LEVELS = [5.0, 8.0, 12.0, 20.0, 40.0]
@@ -45,7 +45,7 @@ def load(fields: pd.DataFrame) -> pd.DataFrame:
 
 
 def spider_like(d: pd.DataFrame, s_min=S_MIN) -> pd.Series:
-    amp = d[["g_amp", "r_amp"]].max(axis=1, skipna=True)
+    amp = d.reindex(columns=["g_amp", "r_amp"]).max(axis=1, skipna=True)  # a band may be absent
     return (d["inside"] & d["bands_agree"] & d["period_d"].between(PERIOD_MIN_D, PERIOD_MAX_D)
             & (amp >= AMP_MIN) & (d["score"] >= s_min))
 
@@ -88,7 +88,7 @@ def main():
         if cd.empty:
             rows.append({"field": c.field, "status": "no_sources"})
             continue
-        sep = sep_arcsec(cd.ra, cd.dec, c.true_ra, c.true_dec)
+        sep = pd.Series(sep_arcsec(cd.ra, cd.dec, c.true_ra, c.true_dec), index=cd.index)
         rec = {"field": c.field, "type": c.true_type, "true_p_d": c.true_pb_h / 24,
                "n_inside": int(cd.inside.sum())}
         if sep.min() > MATCH_ARCSEC:
