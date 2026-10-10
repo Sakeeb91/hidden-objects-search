@@ -6,11 +6,14 @@ It used that as a false-alarm baseline. A compact companion (WD/NS/BH) crossing 
 of its star produces exactly such a brightening. This stage asks, for each flag-free
 inverted signal, whether physics allows it to be self-lensing, and tries to kill it:
 
-  K1  duration: the pulse lasts as long as a central transit for the star's density
-      (dur_ratio = observed / expected). A pulse much LONGER than that is impossible.
-  K2  Gaia RV: the companion mass implied by the amplitude forces a radial-velocity
-      semi-amplitude K. If Gaia DR3 measured the star's RV over several transits and its
-      robust RV amplitude is far below K, that companion is excluded.
+  K1  duration: a central crossing lasts T = (P/pi) arcsin(R*/a), with a from Kepler's law
+      using the star's mass PLUS the minimum lens mass (review 2: the reference's ratio
+      assumed a planet). The minimum mass gives the smallest a and the longest allowed T,
+      so the test is conservative for circular orbits; eccentric orbits can be longer.
+  K2  Gaia RV: the minimum lens mass forces a semi-amplitude K. Given Gaia DR3's robust RV
+      range over N transits, compute the probability that a real companion would show a
+      range this small at random phases, including Gaia's 3-IQR clipping (Monte Carlo).
+      Exclude only if that probability, times the number of signals screened, is < ALPHA.
   K3  occultation: for a WD the implied pure-lensing mass is a lower bound; flagged only.
 
 Inputs are pinned to reference commit 74d5624. Detection statistics come from the
@@ -33,9 +36,10 @@ REF_COMMIT = "74d5624"
 REF_URL = ("https://raw.githubusercontent.com/paraschopra/tess-planet-candidates/"
            f"{REF_COMMIT}/results/phase3/inverted_triage.csv")
 
-DUR_RATIO_MAX = 1.3        # longer than a central crossing (+30% for grid coarseness)
-GAIA_MIN_RV_TRANSITS = 5   # enough epochs that a large K would show in the amplitude
-RV_KILL_FRACTION = 0.5     # robust peak-to-peak below this fraction of 2K excludes it
+DUR_RATIO_MAX = 1.3        # longer than a central crossing (+30% for the BLS duration grid)
+GAIA_MIN_RV_TRANSITS = 3
+ALPHA = 0.05               # familywise false-exclusion rate across all screened signals
+N_SIM = 400_000
 
 
 def load_signals() -> pd.DataFrame:
@@ -47,7 +51,7 @@ def load_signals() -> pd.DataFrame:
     return clean
 
 
-def screen(row, gaia) -> dict:
+def screen(row, gaia, n_tests=1) -> dict:
     m_star = row.rho * row.rstar**3            # rho in solar units -> mass in Msun
     amp = row.depth_ppm * 1e-6
     m_lens = sl.implied_lens_mass(amp, m_star, row.rstar, row.period)
@@ -59,9 +63,12 @@ def screen(row, gaia) -> dict:
         "dur_hr": row.duration_hr, "dur_ratio": row.dur_ratio, "m_star": m_star,
         "r_star": row.rstar, "m_lens_min": m_lens, "K_kms": k, "ellip_ppm": ell * 1e6,
     }
+    expected_hr = sl.central_duration_hr(row.period, m_star + m_lens, row.rstar)
+    out["dur_expected_hr"] = expected_hr
+    out["dur_ratio_massive"] = row.duration_hr / expected_hr
     kills = []
-    if row.dur_ratio > DUR_RATIO_MAX:
-        kills.append("K1:too_long")
+    if out["dur_ratio_massive"] > DUR_RATIO_MAX:
+        kills.append("K1:too_long_circular")
     g = gaia.get(int(row.GAIA)) if pd.notna(row.GAIA) else None
     if g is None:
         out["gaia"] = "no_match"
@@ -71,7 +78,13 @@ def screen(row, gaia) -> dict:
                     "gaia_rv_p": g["rv_chisq_pvalue"], "gaia_nss": g["non_single_star"]})
         n = g["rv_nb_transits"]
         if np.isfinite(n) and n >= GAIA_MIN_RV_TRANSITS and np.isfinite(g["rv_amplitude_robust"]):
-            if g["rv_amplitude_robust"] < RV_KILL_FRACTION * 2 * k:
+            r = g["rv_amplitude_robust"] / k
+            p_ideal = sl.rv_range_cdf(r, int(n))
+            p_clip = max(sl.rv_range_cdf_clipped(r, int(n), nsim=N_SIM), 3 / N_SIM)  # 95% UL
+            out.update({"rv_range_over_K": r, "p_false_excl_ideal": p_ideal,
+                        "p_false_excl_clipped": p_clip,
+                        "p_false_excl_familywise": min(1.0, p_clip * n_tests)})
+            if p_clip * n_tests < ALPHA:
                 kills.append("K2:gaia_rv_too_quiet")
         else:
             out["gaia"] = "rv_insufficient"
@@ -88,14 +101,15 @@ def main():
     sig = sig.merge(tic[["tic", "GAIA"]], on="tic", how="left")
     g = A.gaia_dr3_from_dr2(sig["GAIA"].dropna().astype("int64"))
     gaia = {int(r["dr2_source_id"]): r for r in g.to_dict("records")}
-    rows = [screen(r, gaia) for r in sig.itertuples()]
+    rows = [screen(r, gaia, n_tests=len(sig)) for r in sig.itertuples()]
     if len(rows) != len(sig):
         raise RuntimeError("screen dropped rows")
     out = pd.DataFrame(rows).sort_values(["verdict", "sde"], ascending=[False, False])
     path = ensure(RESULTS / "trackB") / "selflens_quicklook.csv"
     out.to_csv(path, index=False, float_format="%.6g")
-    print(out[["tic", "signal", "period_d", "amp_ppm", "dur_ratio", "m_lens_min", "K_kms",
-               "gaia_rv_n", "gaia_rv_amp", "verdict", "kills"]].to_string(index=False))
+    print(out[["tic", "signal", "period_d", "amp_ppm", "dur_ratio_massive", "m_lens_min", "K_kms",
+               "gaia_rv_n", "rv_range_over_K", "p_false_excl_familywise", "verdict",
+               "kills"]].to_string(index=False))
     print(f"\n{(out.verdict == 'not_excluded').sum()} of {len(out)} not excluded -> {path}")
 
 
