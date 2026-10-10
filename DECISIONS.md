@@ -37,3 +37,13 @@ VizieR J/ApJ/994/8). Track A is therefore framed as:
 
 Practical: the IRSA ZTF light-curve API accepts a 0.05° cone (227 objects, 39 s);
 larger ellipses are covered with one larger cone per source.
+
+## 2026-10-09 — Period-search score design (informed by one control, not thresholds)
+
+On the first blind control (J1023+0038, flickering disk state) raw Lomb-Scargle power
+ranked the true companion 7th of 12, behind faint single-band stars and a 1.035-d
+lunar sideband of the daily alias. Changed, on general grounds: mask lunar-month and
+yearly sidebands of the daily aliases, and score each source by the summed −log10
+Baluev false-alarm probability across bands (accounts for point counts). The companion
+then ranks 1st. Controls were used to choose the *form* of the score only; detection
+**thresholds will be set from the null fields alone**, before targets are inspected.
