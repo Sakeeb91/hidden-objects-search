@@ -1,0 +1,34 @@
+{
+  "catalog": "https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/gll_psc_v35.fit",
+  "cv_auc": 0.9870981209802393,
+  "features": [
+    "lp_beta",
+    "lp_sigcurv",
+    "log_epeak",
+    "pl_index",
+    "lp_index",
+    "log_varindex",
+    "frac_var",
+    "hr12",
+    "hr23",
+    "hr34",
+    "hr45",
+    "hr56"
+  ],
+  "n_labelled_psr": 320,
+  "n_labelled_agn": 4014,
+  "n_dr4_unassoc": 324,
+  "n_selected": 20,
+  "cuts": {
+    "dec_min": -28.0,
+    "a95_max_deg": 0.2,
+    "p_psr_min": 0.1,
+    "flags": 0
+  },
+  "cut_counts": {
+    "cut_dec": 219,
+    "cut_flags": 171,
+    "cut_a95": 261,
+    "cut_ppsr": 143
+  }
+}
