@@ -4,7 +4,7 @@ Refuses to run unless results/trackA/a05_frozen_calibration.json is committed an
 unmodified in git, so thresholds provably predate looking at targets.
 
 For each target ellipse: spider-like periodic sources (same cuts as a05), uniform and
-targeted X-ray matches, Gaia DR3 astrometry, and a novelty check (SpiderCat, Lu+2024, SIMBAD,
+targeted X-ray matches, Gaia DR3 astrometry, and a novelty check (SpiderCat, Lu+2024, ATNF, SIMBAD,
 VSX, ZTF periodic variables of Chen et al. 2020) with the date of the check. Each field's
 count is compared with its own
 three matched off-source fields (exact conditional binomial) and with all off-source counts
@@ -85,11 +85,13 @@ def novelty(ra, dec, spiders: pd.DataFrame, lu: pd.DataFrame) -> dict:
     sim = simbad_cone(ra, dec, NOVELTY_RADIUS)
     vsx = _vizier_cone("B/vsx/vsx", ra, dec, NOVELTY_RADIUS)
     chen = _vizier_cone("J/ApJS/249/18/table2", ra, dec, NOVELTY_RADIUS)
+    atnf = _vizier_cone("B/psr/psr", ra, dec, 30.0)  # radio timing positions are precise
     return {"spidercat": ";".join(sc["Name"]) if len(sc) else "",
             "lu2024": ";".join(lc["ztf_name"]) if len(lc) else "",
             "simbad": ";".join(f"{a} [{b}]" for a, b in zip(sim.get("main_id", []), sim.get("otype", []))),
             "vsx": ";".join(vsx["Name"].astype(str)) if "Name" in vsx else "",
-            "ztf_chen2020": ";".join(chen["ID"].astype(str)) if "ID" in chen else ""}
+            "ztf_chen2020": ";".join(chen["ID"].astype(str)) if "ID" in chen else "",
+            "atnf": ";".join(atnf["PSRJ"].astype(str)) if "PSRJ" in atnf else ""}
 
 
 def gaia_params(ra, dec) -> dict:
@@ -116,7 +118,10 @@ def main():
     extra = [novelty(r.ra, r.dec, spiders, lu) | gaia_params(r.ra, r.dec) for r in cand.itertuples()]
     cand = pd.concat([cand.reset_index(drop=True), pd.DataFrame(extra)], axis=1)
     cand["novelty_checked"] = today
-    cand["known"] = (cand[["spidercat", "lu2024", "simbad", "vsx", "ztf_chen2020"]].fillna("") != "").any(axis=1)
+    nov = cand.reindex(columns=["spidercat", "lu2024", "atnf", "vsx", "ztf_chen2020", "simbad"]).fillna("")
+    cand["known_pulsar_or_candidate"] = (nov[["spidercat", "lu2024", "atnf"]] != "").any(axis=1)
+    cand["known_variable"] = (nov[["vsx", "ztf_chen2020"]] != "").any(axis=1)
+    cand["in_simbad"] = nov["simbad"] != ""  # any object type; reported, not a veto
     cand = cand.sort_values(["xray_uniform", "score"], ascending=False)
     cand.to_csv(RESULTS / "trackA" / "a06_candidates.csv", index=False, float_format="%.7g")
 
@@ -148,7 +153,7 @@ def main():
           f"{tot_x} with uniform X-ray (expectation {exp_x:.2f})")
     print(per.to_string(index=False))
     cols = ["field", "ra", "dec", "period_d", "score", "g_mag", "g_amp", "xray_uniform", "xray_any",
-            "known", "simbad", "vsx", "gaia_parallax", "gaia_bp_rp"]
+            "known_pulsar_or_candidate", "known_variable", "simbad", "gaia_parallax", "gaia_bp_rp"]
     print(cand[[c for c in cols if c in cand]].to_string(index=False))
 
 
