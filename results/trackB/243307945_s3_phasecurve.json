@@ -1,0 +1,31 @@
+{
+  "tic": 243307945,
+  "signal": 3,
+  "period_d": 6.26975,
+  "t0_btjd": 1605.678021100915,
+  "sectors": [
+    11,
+    38,
+    64,
+    101,
+    102
+  ],
+  "n_points": 28937,
+  "m_lens_min": 0.405784,
+  "K_kms_min": 42.2985,
+  "pred_beam_ppm": 451.49634818364916,
+  "pred_ellip_ppm": 161.017,
+  "meas_P_ppm": 467.82316437944655,
+  "meas_P2_ppm": 72.2292902403736,
+  "null_P_median_ppm": 609.771868836186,
+  "null_P_p99.7_ppm": 2790.2339047482146,
+  "null_P2_median_ppm": 82.53475787493223,
+  "null_P2_p99.7_ppm": 390.4283180428412,
+  "meas_P_null_frac_ge": 0.5414201183431953,
+  "meas_P2_null_frac_ge": 0.5739644970414202,
+  "inj_recovered_P_ppm": 529.4225821471622,
+  "inj_recovered_P2_ppm": 102.37112122425374,
+  "beam_test": "insensitive",
+  "ellip_test": "insensitive",
+  "verdict": "untested: TESS phase curve not sensitive enough at this period"
+}
