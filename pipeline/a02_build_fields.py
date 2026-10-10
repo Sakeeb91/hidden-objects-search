@@ -17,7 +17,7 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from hos import fermi, known
+from hos import archives, fermi, known
 from hos.paths import RESULTS, ensure
 
 SEED = 20261009
@@ -29,6 +29,10 @@ CONTROL_GMAG_MAX = 20.0       # when SpiderCat lists g; otherwise a Gaia DR3 mat
 CONTROL_A95_MAX = 0.2
 GLAT_MIN = 10.0               # Galactic-plane fields are too dense for the IRSA API;
                               # applied identically to targets, nulls and controls
+DENSITY_MAX = 50_000          # Gaia DR3 G < 20.5 sources per deg^2 at the field centre.
+                              # Above this the IRSA cone API stalls (objects x epochs of the
+                              # high-cadence plane survey). A dense target is dropped WITH its
+                              # nulls; dense controls are dropped. Positions are unchanged.
 
 
 def null_fields(targets: pd.DataFrame, cat: pd.DataFrame, rng) -> pd.DataFrame:
@@ -70,6 +74,28 @@ def control_fields(cat: pd.DataFrame) -> pd.DataFrame:
         "true_gmag": m["gmag"]})
 
 
+def gaia_density(ra: float, dec: float, r=0.05) -> float:
+    q = ("SELECT COUNT(*) AS n FROM gaiadr3.gaia_source WHERE phot_g_mean_mag < 20.5 AND "
+         f"1=CONTAINS(POINT(ra,dec),CIRCLE({ra:.5f},{dec:.5f},{r}))")
+    return int(archives.gaia_query(q, "density")["n"].iloc[0]) / (np.pi * r**2)
+
+
+def apply_density_cut(fields: pd.DataFrame) -> pd.DataFrame:
+    fields = fields.copy()
+    fields["gaia_density"] = [gaia_density(r.ra, r.dec) for r in fields.itertuples()]
+    dense_targets = set(fields.loc[(fields.kind == "target") &
+                                   (fields.gaia_density > DENSITY_MAX), "parent"])
+    drop = ((fields.kind != "control") & fields.parent.isin(dense_targets)) | \
+           ((fields.kind == "control") & (fields.gaia_density > DENSITY_MAX))
+    if dense_targets:
+        print("deferred (density > %d/deg2):" % DENSITY_MAX, ", ".join(sorted(dense_targets)))
+    kept = fields[~drop]
+    left = kept[(kept.kind == "offsource") & (kept.gaia_density > DENSITY_MAX)]
+    if len(left):
+        raise RuntimeError(f"off-source fields above the density cap: {left.field.tolist()}")
+    return kept
+
+
 def main():
     rng = np.random.default_rng(SEED)
     cat = fermi.load_4fgl()
@@ -85,7 +111,7 @@ def main():
                             "pa95": sel["pa95"]})
     nulls = null_fields(sel, cat, rng)
     ctrl = control_fields(cat)
-    fields = pd.concat([targets, nulls, ctrl], ignore_index=True)
+    fields = apply_density_cut(pd.concat([targets, nulls, ctrl], ignore_index=True))
     if fields["field"].duplicated().any():
         raise RuntimeError("duplicate field names")
     out = ensure(RESULTS / "trackA") / "a02_fields.csv"

@@ -19,7 +19,7 @@ def read_fields(path=FIELDS_CSV) -> pd.DataFrame:
         raise ValueError(f"unexpected field kinds: {sorted(bad)}")
     for col in ("ra", "dec", "a95", "b95", "pa95"):
         df[col] = pd.to_numeric(df[col], errors="raise")
-    for col in ("true_ra", "true_dec", "true_pb_h", "true_gmag"):
+    for col in ("true_ra", "true_dec", "true_pb_h", "true_gmag", "gaia_density"):
         if col in df:
             df[col] = pd.to_numeric(df[col].replace("", None), errors="coerce")
     return df
