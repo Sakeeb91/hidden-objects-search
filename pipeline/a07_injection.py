@@ -14,12 +14,13 @@ from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 
-from a05_calibrate import PERIOD_MAX_D, PERIOD_MIN_D, period_match, spider_like
+from a05_calibrate import period_match, spider_like
 from hos import period as P
 from hos import ztf
 from hos.paths import RESULTS
 
 AMPS = [0.02, 0.05, 0.1, 0.2, 0.4]   # semi-amplitude, mag
+ORBIT_MIN_D, ORBIT_MAX_D = 2 / 24, 1.0   # injected orbital periods (spider range)
 SEED = 7
 
 
@@ -70,7 +71,7 @@ def main():
     for amp in AMPS:
         for k in range(n_per_amp):
             g = sources[rng.integers(len(sources))]
-            p = float(np.exp(rng.uniform(np.log(PERIOD_MIN_D), np.log(1.0))))
+            p = float(np.exp(rng.uniform(np.log(ORBIT_MIN_D), np.log(ORBIT_MAX_D))))
             shape = "irradiation" if k % 2 == 0 else "ellipsoidal"
             jobs.append((g, amp, p, shape, int(rng.integers(1 << 31))))
     with Pool(workers) as pool:
