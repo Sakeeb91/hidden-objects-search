@@ -18,6 +18,7 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 
 from hos import xray
+from hos.fields import read_fields
 from hos.paths import DATA, RESULTS
 from hos.sky import in_ellipse, sep_arcsec
 
@@ -65,12 +66,14 @@ def period_match(p, true_p, tol=0.01):
 
 
 def main():
-    fields = pd.read_csv(RESULTS / "trackA" / "a02_fields.csv")
-    fields = fields[fields["kind"].isin(["null", "control"])]  # never targets here
+    fields = read_fields()
+    fields = fields[fields["kind"].isin(["offsource", "control"])]  # never targets here
     d = load(fields)
 
-    null_fields = fields[fields.kind == "null"]
-    nd = d[d.kind == "null"]
+    null_fields = fields[fields.kind == "offsource"]
+    if null_fields.empty:
+        raise SystemExit("no off-source fields: refusing to calibrate")
+    nd = d[d.kind == "offsource"]
     per_field = {s: nd[spider_like(nd, s)].groupby("field").size()
                  .reindex(null_fields.field, fill_value=0) for s in S_LEVELS}
     lam = {str(s): {"mean_per_ellipse": float(v.mean()), "frac_fields_with_any": float((v > 0).mean())}

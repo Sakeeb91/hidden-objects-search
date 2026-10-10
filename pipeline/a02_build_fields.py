@@ -3,7 +3,7 @@
 Three kinds, all searched with the identical pipeline:
 
 - target:  the selected DR4-new unassociated ellipses (a01).
-- null:    NULLS_PER_TARGET copies of each target ellipse moved 1.5-3 deg away, clear of
+- offsource: NULLS_PER_TARGET copies of each target ellipse moved 1.5-3 deg away, clear of
            every 4FGL source. They measure how often a field with no gamma-ray source
            still yields a spider-like periodic star (the false-alarm rate).
 - control: known spiders with a 4FGL association and a published orbital period,
@@ -48,7 +48,7 @@ def null_fields(targets: pd.DataFrame, cat: pd.DataFrame, rng) -> pd.DataFrame:
             sep = c.separation(allsrc).deg
             if np.any(sep < cat["a95"].fillna(0.2).to_numpy() + t.a95 + NULL_CLEARANCE_DEG):
                 continue
-            rows.append({"field": f"null_{t.name.replace('4FGL ', '')}_{made}", "kind": "null",
+            rows.append({"field": f"null_{t.name.replace('4FGL ', '')}_{made}", "kind": "offsource",
                          "parent": t.name, "ra": c.ra.deg, "dec": c.dec.deg, "a95": t.a95,
                          "b95": t.b95, "pa95": t.pa95})
             made += 1

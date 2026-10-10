@@ -17,6 +17,7 @@ import pandas as pd
 from a05_calibrate import period_match, spider_like
 from hos import period as P
 from hos import ztf
+from hos.fields import read_fields
 from hos.paths import RESULTS
 
 AMPS = [0.02, 0.05, 0.1, 0.2, 0.4]   # semi-amplitude, mag
@@ -25,9 +26,9 @@ SEED = 7
 
 
 def pool_sources(n_fields=51):
-    fields = pd.read_csv(RESULTS / "trackA" / "a02_fields.csv")
+    fields = read_fields()
     out = []
-    for f in fields[fields.kind == "null"].field[:n_fields]:
+    for f in fields[fields.kind == "offsource"].field[:n_fields]:
         p = ztf.CACHE / f"{f}.csv.gz"
         if not p.exists():
             continue

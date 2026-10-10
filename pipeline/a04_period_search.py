@@ -14,6 +14,7 @@ import pandas as pd
 
 from hos import period as P
 from hos import ztf
+from hos.fields import read_fields
 from hos.paths import DATA, RESULTS, ensure
 
 OUT = DATA / "trackA" / "periods"
@@ -49,7 +50,7 @@ def run_field(field: str) -> dict:
 
 def main():
     workers = int(sys.argv[1]) if len(sys.argv) > 1 else 10
-    fields = sys.argv[2:] or pd.read_csv(RESULTS / "trackA" / "a02_fields.csv")["field"].tolist()
+    fields = sys.argv[2:] or read_fields()["field"].tolist()
     with Pool(workers) as pool:
         log = []
         for rec in pool.imap_unordered(run_field, fields):

@@ -13,9 +13,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 
 from hos import ztf
+from hos.fields import read_fields
 from hos.paths import RESULTS
 
-ORDER = {"control": 0, "null": 1, "target": 2}
+ORDER = {"control": 0, "offsource": 1, "target": 2}
 
 
 def fetch(row):
@@ -32,7 +33,7 @@ def fetch(row):
 
 def main():
     workers = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-    fields = pd.read_csv(RESULTS / "trackA" / "a02_fields.csv")
+    fields = read_fields()
     fields = fields.sort_values("kind", key=lambda s: s.map(ORDER))
     log = []
     with ThreadPoolExecutor(workers) as pool:

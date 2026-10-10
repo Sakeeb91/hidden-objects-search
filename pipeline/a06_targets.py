@@ -23,6 +23,7 @@ from scipy.stats import poisson
 from a05_calibrate import add_xray, load, spider_like
 from hos import archives as A
 from hos import known
+from hos.fields import read_fields
 from hos.paths import RESULTS, ROOT
 from hos.sky import sep_arcsec
 
@@ -97,7 +98,7 @@ def main():
     lam = frozen["null_rate_by_score"][str(frozen["cuts"]["s_min"])]["mean_per_ellipse"]
     lam_x = frozen["null_rate_spider_like_with_uniform_xray"]["mean_per_ellipse"]
 
-    fields = pd.read_csv(RESULTS / "trackA" / "a02_fields.csv")
+    fields = read_fields()
     tf = fields[fields.kind == "target"]
     d = load(tf)
     cand = add_xray(d[spider_like(d)].copy())
