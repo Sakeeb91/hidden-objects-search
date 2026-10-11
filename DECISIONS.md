@@ -94,3 +94,12 @@ To overlap CPU with the download, `a04` runs on every field as its light curves 
 including targets. Target tables live in `data/` (gitignored) and are read only by `a06`,
 which refuses to run until the frozen calibration (cuts + code hashes) is committed.
 No target table is opened or summarised before then.
+
+## 2026-10-10 — Common-period veto (from the off-source calibration)
+
+The first calibration run (no targets examined) found the spider-like rate dominated by a
+sampling systematic: in off-source field J2050.4+1807_1, 250 of 334 spider-like stars
+share P = 0.3365 d, with further clusters at 0.4903 and 0.9622 d (dispersion index 202).
+Added the standard "crowded period" veto: within one field, a period shared (|Δ ln P| <
+0.002) by ≥ 3 spider-like stars is treated as systematic. The X-ray compound statistic was
+unaffected (dispersion index 0.98). The calibration is re-run before freezing.
