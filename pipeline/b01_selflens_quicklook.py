@@ -13,7 +13,8 @@ inverted signal, whether physics allows it to be self-lensing, and tries to kill
   K2  Gaia RV: the minimum lens mass forces a semi-amplitude K. Given Gaia DR3's robust RV
       range over N transits, compute the probability that a real companion would show a
       range this small at random phases, including Gaia's 3-IQR clipping (Monte Carlo).
-      Exclude only if that probability, times the number of signals screened, is < ALPHA.
+      Exclude only if its 95% Monte Carlo upper bound, times the number of signals
+      screened, is < ALPHA.
   K3  occultation: for a WD the implied pure-lensing mass is a lower bound; flagged only.
 
 Inputs are pinned to reference commit 74d5624. Detection statistics come from the
@@ -25,6 +26,8 @@ import warnings
 
 import numpy as np
 import pandas as pd
+
+from scipy.stats import beta as beta_dist
 
 from hos import archives as A
 from hos import selflens as sl
@@ -80,7 +83,9 @@ def screen(row, gaia, n_tests=1) -> dict:
         if np.isfinite(n) and n >= GAIA_MIN_RV_TRANSITS and np.isfinite(g["rv_amplitude_robust"]):
             r = g["rv_amplitude_robust"] / k
             p_ideal = sl.rv_range_cdf(r, int(n))
-            p_clip = max(sl.rv_range_cdf_clipped(r, int(n), nsim=N_SIM), 3 / N_SIM)  # 95% UL
+            p_mc = sl.rv_range_cdf_clipped(r, int(n), nsim=N_SIM)
+            # one-sided 95% Clopper-Pearson upper bound on the Monte Carlo estimate (review 3)
+            p_clip = float(beta_dist.ppf(0.95, round(p_mc * N_SIM) + 1, N_SIM - round(p_mc * N_SIM)))
             out.update({"rv_range_over_K": r, "p_false_excl_ideal": p_ideal,
                         "p_false_excl_clipped": p_clip,
                         "p_false_excl_familywise": min(1.0, p_clip * n_tests)})
