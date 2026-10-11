@@ -100,7 +100,11 @@ def gaia_params(ra, dec) -> dict:
          "FROM gaiadr3.gaia_source WHERE 1 = CONTAINS(POINT(ra, dec), CIRCLE(%f, %f, %f)) "
          "ORDER BY sep" % (ra, dec, ra, dec, 1.5 / 3600))
     g = A.gaia_query(q, "gaia_cand")
-    return {f"gaia_{k}": v for k, v in g.iloc[0].to_dict().items()} if len(g) else {"gaia_source_id": None}
+    if not len(g):
+        return {"gaia_source_id": None}
+    out = {f"gaia_{k}": v for k, v in g.iloc[0].to_dict().items()}
+    out["gaia_source_id"] = int(g["source_id"].iloc[0])  # exact; row dicts upcast to float
+    return out
 
 
 def main():
@@ -116,14 +120,20 @@ def main():
     today = dt.date.today().isoformat()
     lu = known.lu2024()
     extra = [novelty(r.ra, r.dec, spiders, lu) | gaia_params(r.ra, r.dec) for r in cand.itertuples()]
-    cand = pd.concat([cand.reset_index(drop=True), pd.DataFrame(extra)], axis=1)
+    extra_df = pd.DataFrame(extra)
+    # Build the id column from the Python ints: DataFrame() infers float64 when ids mix
+    # with None, which silently corrupts 19-digit Gaia ids (review 3).
+    extra_df["gaia_source_id"] = A.exact_int_column([e.get("gaia_source_id") for e in extra])
+    cand = pd.concat([cand.reset_index(drop=True), extra_df], axis=1)
     cand["novelty_checked"] = today
     nov = cand.reindex(columns=["spidercat", "lu2024", "atnf", "vsx", "ztf_chen2020", "simbad"]).fillna("")
     cand["known_pulsar_or_candidate"] = (nov[["spidercat", "lu2024", "atnf"]] != "").any(axis=1)
     cand["known_variable"] = (nov[["vsx", "ztf_chen2020"]] != "").any(axis=1)
     cand["in_simbad"] = nov["simbad"] != ""  # any object type; reported, not a veto
     cand = cand.sort_values(["xray_uniform", "score"], ascending=False)
-    cand.to_csv(RESULTS / "trackA" / "a06_candidates.csv", index=False, float_format="%.7g")
+    # Keep ids exact and periods at full precision (review 3): no %g rounding of ids.
+    cand["src"] = cand["src"].astype("int64")
+    cand.to_csv(RESULTS / "trackA" / "a06_candidates.csv", index=False, float_format="%.12g")
 
     counts = frozen["null_counts"]
     n_null_fields = len(counts)
