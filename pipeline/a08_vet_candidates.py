@@ -67,6 +67,19 @@ def model_curve(beta, period, nh=3, n=400):
     return ph, m
 
 
+def refine_period(bands: dict, period: float, span: float = 3.0, n: int = 20001) -> float:
+    """Refine a period found on the coarse search grid (and stored at 7 significant figures)
+    by a fine multiband search within +-span/baseline of it (review 3)."""
+    from astropy.timeseries import LombScargle
+
+    t_all = np.concatenate([b[0] for b in bands.values()])
+    base = max(np.ptp(t_all), 1.0)
+    f0 = 1 / period
+    f = np.linspace(f0 - span / base, f0 + span / base, n)
+    pw = sum(LombScargle(b[0], b[1]).power(f) for b in bands.values())
+    return float(1 / f[np.argmax(pw)])
+
+
 def shape_metrics(t, y, period):
     beta, _, a = fourier(t, y, period)
     ph, m = model_curve(beta, period)
@@ -93,9 +106,9 @@ def hint(row) -> str:
     if row.minima_diff_2p < 0.3 * row.ptp_model and 5 < 2 * p_h < 24 and row.a2_over_a1 < 0.3:
         return "contact/ellipsoidal binary (true P = 2P_found)"
     if row.rise_frac < 0.35 and p_h < 7:
-        return "pulsator (delta Sct / SX Phe / RR Lyr)"
+        return "pulsator-like (fast rise)"
     if row.colour_amp > 0.02 and row.a2_over_a1 < 0.3:
-        return "irradiation-like (colour varies with phase)"
+        return "sinusoidal, colour varies with phase (pulsator or irradiation)"
     return "unclassified"
 
 
@@ -116,11 +129,13 @@ def main():
             y = (gb["mag"] - gb.groupby("oid")["mag"].transform("median")).to_numpy()
             bands[b] = (gb["mjd"].to_numpy(), y)
         main_band = max(bands, key=lambda b: len(bands[b][0]))
-        sm = shape_metrics(*bands[main_band], r.period_d)
+        period = refine_period(bands, r.period_d)
+        sm = shape_metrics(*bands[main_band], period)
         rec = {"id": f"C{k:02d}", "field": r.field, "src": int(r.src), "ra": r.ra, "dec": r.dec,
-               "period_d": r.period_d, "score": r.score, "coherence": r.coherence,
+               "period_d": period, "period_search_d": r.period_d, "score": r.score,
+               "coherence": r.coherence,
                "g_mag": r.g_mag, "r_mag": getattr(r, "r_mag", np.nan), "main_band": main_band,
-               **sm, "colour_amp": colour_amplitude(bands.get("zg"), bands.get("zr"), r.period_d),
+               **sm, "colour_amp": colour_amplitude(bands.get("zg"), bands.get("zr"), period),
                "gaia_parallax": r.gaia_parallax,
                "gaia_plx_snr": getattr(r, "gaia_parallax_over_error", np.nan),
                "gaia_G": getattr(r, "gaia_phot_g_mean_mag", np.nan), "gaia_bp_rp": r.gaia_bp_rp,
@@ -128,7 +143,7 @@ def main():
         snr = rec["gaia_plx_snr"]
         rec["abs_G"] = (rec["gaia_G"] + 5 * np.log10(rec["gaia_parallax"] / 100.0)
                         if np.isfinite(snr) and snr > 5 else np.nan)
-        rec["systematic_period"] = bool(np.any(np.abs(np.log(r.period_d / sysp)) < SYSTEMATIC_TOL)) \
+        rec["systematic_period"] = bool(np.any(np.abs(np.log(period / sysp)) < SYSTEMATIC_TOL)) \
             if len(sysp) else False
         rec["hint"] = "cadence systematic (period recurs in off-source fields)" \
             if rec["systematic_period"] else hint(pd.Series(rec))
@@ -139,7 +154,7 @@ def main():
             if b not in bands:
                 continue
             t, y = bands[b]
-            for a, per, lab in ((ax[0], r.period_d, "P"), (ax[1], 2 * r.period_d, "2P")):
+            for a, per, lab in ((ax[0], period, "P"), (ax[1], 2 * period, "2P")):
                 ph = (t / per) % 1
                 a.plot(np.r_[ph, ph + 1], np.r_[y, y], ".", ms=1.5, alpha=0.35, color=col,
                        label=b if lab == "P" else None)
@@ -154,7 +169,7 @@ def main():
         plt.close(fig)
 
     out = pd.DataFrame(rows)
-    out.to_csv(RESULTS / "trackA" / "a08_vetting.csv", index=False, float_format="%.5g")
+    out.to_csv(RESULTS / "trackA" / "a08_vetting.csv", index=False, float_format="%.12g")
     print(out[["id", "field", "period_d", "g_mag", "ptp_model", "a2_over_a1", "rise_frac",
                "minima_diff_2p", "colour_amp", "abs_G", "gaia_bp_rp", "hint"]].to_string(index=False))
 
