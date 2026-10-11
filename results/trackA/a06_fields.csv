@@ -1,0 +1,16 @@
+field,n_matched_nulls,spider_like_n,spider_like_matched_null_n,spider_like_p_matched,spider_like_p_pooled_nb,spider_like_xray_n,spider_like_xray_matched_null_n,spider_like_xray_p_matched,spider_like_xray_p_pooled_nb,spider_like_p_matched_holm,spider_like_p_pooled_nb_holm,spider_like_xray_p_matched_holm,spider_like_xray_p_pooled_nb_holm
+tgt_J0549.0-0233,3,0,1,1,1,0,1,1,1,1,1,1,1
+tgt_J0640.5-2714,3,6,8,0.1117,0.03409,0,0,1,1,1,0.4432,1,1
+tgt_J2348.6-2054,3,0,0,1,1,0,0,1,1,1,1,1,1
+tgt_J0604.9-1042,3,0,7,1,1,0,0,1,1,1,1,1,1
+tgt_J1140.4+0022,3,1,1,0.4375,0.9016,0,0,1,1,1,1,1,1
+tgt_J1627.0+1035,3,7,4,0.007561,0.01122,0,0,1,1,0.1134,0.1683,1,1
+tgt_J1546.4-1409,3,1,1,0.4375,0.9016,0,0,1,1,1,1,1,1
+tgt_J2328.8+4537,3,0,6,1,1,0,0,1,1,1,1,1,1
+tgt_J0021.7+4533,3,3,7,0.4744,0.4147,0,0,1,1,1,1,1,1
+tgt_J2032.0+0229,3,7,39,0.9621,0.01122,0,0,1,1,1,0.1683,1,1
+tgt_J0122.4-1509,3,0,0,1,1,0,0,1,1,1,1,1,1
+tgt_J1102.1+1318,3,0,0,1,1,0,0,1,1,1,1,1,1
+tgt_J2307.8-1655,3,0,0,1,1,0,0,1,1,1,1,1,1
+tgt_J2050.4+1807,3,5,30,0.959,0.09122,0,1,1,1,1,1,1,1
+tgt_J1235.9+1136,3,0,1,1,1,0,0,1,1,1,1,1,1
