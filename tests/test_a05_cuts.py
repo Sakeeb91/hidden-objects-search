@@ -41,3 +41,14 @@ def test_field_without_g_band_does_not_crash():
 def test_ellipsoidal_half_period_of_shortest_spiders_is_kept():
     # J1622-0315: 3.88 h orbit shows up at P/2 = 1.94 h
     assert a05.spider_like(src(period_d=1.94 / 24)).iloc[0]
+
+
+def test_common_period_in_one_field_is_vetoed_but_not_across_fields():
+    rows = [src(period_d=0.3365 * (1 + 1e-4 * k)).assign(field="A") for k in range(4)]
+    rows += [src(period_d=0.25).assign(field="A")]
+    rows += [src(period_d=0.3365).assign(field=f) for f in ("B", "C", "D")]
+    d = pd.concat(rows, ignore_index=True)
+    sl = a05.spider_like(d)
+    assert not sl.iloc[:4].any()            # four stars sharing one period in field A
+    assert sl.iloc[4]                        # a different period in field A survives
+    assert sl.iloc[5:].all()                 # same period in different fields is fine

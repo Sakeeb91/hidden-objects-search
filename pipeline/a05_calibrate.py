@@ -27,6 +27,8 @@ PERIOD_MIN_D, PERIOD_MAX_D = 1 / 24, 36 / 24
 AMP_MIN = 0.05        # fitted peak-to-peak, mag
 AMP_SNR_MIN = 5.0     # fitted semi-amplitude / its error, in the same band
 COHERENCE_MIN = 2.0   # period significant (summed -log10 FAP >= 2) in BOTH time halves
+COMMON_PERIOD_N = 3   # >= this many spider-like stars in ONE field sharing a period is a
+COMMON_PERIOD_TOL = 0.002  # cadence systematic (null J2050.4+1807_1: 250 stars at 0.3365 d)
 S_MIN = 5.0
 S_LEVELS = [5.0, 8.0, 12.0, 20.0, 40.0]
 MATCH_ARCSEC = 2.0
@@ -49,6 +51,7 @@ def code_hashes() -> dict:
 def cuts() -> dict:
     return {"period_min_d": PERIOD_MIN_D, "period_max_d": PERIOD_MAX_D, "amp_min_mag": AMP_MIN,
             "amp_snr_min": AMP_SNR_MIN, "coherence_min": COHERENCE_MIN, "s_min": S_MIN,
+            "common_period_n": COMMON_PERIOD_N, "common_period_tol": COMMON_PERIOD_TOL,
             "bands_agree": True,
             "inside_95pct_ellipse": True}
 
@@ -68,7 +71,28 @@ def load(fields: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
+def common_period_veto(d: pd.DataFrame, candidate: pd.Series) -> pd.Series:
+    """True for candidates whose period is shared (within COMMON_PERIOD_TOL in log P) by
+    >= COMMON_PERIOD_N candidates in the same field. A real companion does not share its
+    exact period with several unrelated field stars; a sampling artefact does."""
+    veto = pd.Series(False, index=d.index)
+    cand = d[candidate]
+    for _, g in cand.groupby("field"):
+        lp = np.log(g["period_d"].to_numpy())
+        n_close = (np.abs(lp[:, None] - lp[None, :]) < COMMON_PERIOD_TOL).sum(axis=1)
+        veto.loc[g.index[n_close >= COMMON_PERIOD_N]] = True
+    return veto
+
+
 def spider_like(d: pd.DataFrame, s_min=S_MIN) -> pd.Series:
+    """Spider-like periodic sources (per-source cuts, then the per-field common-period veto)."""
+    base = spider_like_source(d, s_min)
+    if "field" not in d or not base.any():
+        return base
+    return base & ~common_period_veto(d, base)
+
+
+def spider_like_source(d: pd.DataFrame, s_min=S_MIN) -> pd.Series:
     c = d.reindex(columns=["g_amp", "r_amp", "g_amp_snr", "r_amp_snr"])  # a band may be absent
     band_ok = ((c["g_amp"] >= AMP_MIN) & (c["g_amp_snr"] >= AMP_SNR_MIN)) | \
               ((c["r_amp"] >= AMP_MIN) & (c["r_amp_snr"] >= AMP_SNR_MIN))
