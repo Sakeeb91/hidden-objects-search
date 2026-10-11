@@ -8,12 +8,12 @@
 - **Track A (spider pulsars in 4FGL-DR4-new sources): complete, negative.** 15 targets,
   45 matched off-source fields, 13 blind controls; calibration frozen at `1554eac` before
   targets; 30 spider-like stars vs 35.0 expected, no X-ray counterparts; injection-recovery
-  and vetting done; C01 identified as a probable halo SX Phe star.
+  and vetting done; C01 is an SX Phe / δ Sct candidate.
   `docs/trackA_spider_report.md`.
 - Two independent reviews of design and maths, with point-by-point responses
   (`docs/review/`). CI green.
 
-**In progress:** final independent audit of the Track A *results* (Codex GPT-6-Astra).
+**Done:** final results audit (review 3) and all its corrections; headline is "no significant excess, no compelling identification".
 
 **Possible next steps (not started):**
 1. Deferred Track A targets (3 near the plane, 2 dense) via a TAP pre-selection.
