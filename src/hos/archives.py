@@ -108,3 +108,19 @@ def gaia_dr3_from_dr2(dr2_ids) -> pd.DataFrame:
     df["abs_dmag"] = df["magnitude_difference"].abs()
     df = df.sort_values(["dr2_source_id", "angular_distance", "abs_dmag"])
     return df.drop_duplicates("dr2_source_id").drop(columns="abs_dmag")
+
+
+def exact_int_column(values) -> pd.arrays.IntegerArray:
+    """Nullable Int64 column built from Python ints/None without passing through float64.
+
+    pd.DataFrame / pd.Series infer float64 when large ints mix with None or NaN, which
+    silently corrupts 19-digit ids (Gaia source_id). Strings of digits are accepted."""
+    out = []
+    for v in values:
+        if v is None or (isinstance(v, float) and v != v) or v is pd.NA:
+            out.append(pd.NA)
+        elif isinstance(v, float):
+            raise TypeError(f"refusing float id {v!r}: precision may already be lost")
+        else:
+            out.append(int(v))
+    return pd.array(out, dtype="Int64")
