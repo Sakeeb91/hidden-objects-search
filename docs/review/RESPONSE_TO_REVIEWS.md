@@ -37,3 +37,19 @@ noted; commit subjects cite the review.
 | R1: single-band sources pass `bands_agree` automatically | **Not changed.** Faint spider companions are often single-band in g; recorded via `n_bands`. |
 | R1: no barycentric correction (~0.07 phase smear at 2 h) | **Not changed.** Smaller than the fold resolution; noted. |
 | R1: SIMBAD-within-3″ "known" flag too aggressive; ATNF/TRAPUM not queried | **Partly accepted.** "Known" is now a set of named columns reported separately; ATNF query to be added at vetting. |
+
+## Review 3 (Codex GPT-6-Astra, results audit, 2026-10-10)
+
+| Finding | Response |
+|---|---|
+| "No spider candidate" overstated | **Accepted.** Headline is "no significant excess and no compelling identification". |
+| Add a matched population test and a conditional limit | **Accepted.** `a10_population.py`: exact stratified permutation (p = 0.74); conditional N95 = 11–15; all values match the audit. |
+| "Complete to G ≈ 19.5" unjustified; magnitudes are ZTF medians | **Accepted.** Report gives conditional efficiencies with CIs and lists what injections bypass. |
+| C01 classification premature; distance bound model-dependent; eRASS1 no coverage | **Accepted.** "SX Phe / δ Sct candidate"; bounds for 1.3/1.5/2.0 error inflation; Gaia astrometric diagnostics added (clean); eRASS1 reported as no coverage. |
+| a09 used a rounded period | **Accepted.** a08 refines each period; with the refined period the residuals show no second mode (FAP ≈ 0.05), as the audit found. |
+| Control intersections and X-ray counts wrong (9/11, 2/13) | **Accepted.** 8/11, 7/11 with rank 1; 3/13 uniform X-ray, 1/13 also recovered. |
+| Gaia ids rounded / corrupted in a06 output | **Accepted.** Exact Int64 ids via a tested helper; full-precision floats. Counts unchanged. |
+| Track B "≤ 0.003" not a strict bound | **Accepted.** Exclusion now uses the 95% Clopper–Pearson Monte Carlo bound (worst 0.0033 → familywise ≤ 0.0034). |
+| Six-spectrum recommendation ignores eccentricity | **Accepted.** e = 0.8 at apastron: six spectra miss 4.9%; twelve needed for < 1%. |
+| Pooled NB models one shared rate, not field heterogeneity | **Accepted as stated limitation**; the matched per-target test and the permutation test carry the inference. |
+| Git cannot prove target tables were unread | **Accepted as caveat** in the report. |
