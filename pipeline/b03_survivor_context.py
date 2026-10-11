@@ -91,6 +91,24 @@ def miss_probability(k, n, rng):
     return float((np.ptp(v, axis=1) < DECISION_KMS).mean())
 
 
+def kepler_rv(mean_anom, e, omega):
+    """Unit-K radial velocity for mean anomalies (vectorised Newton solve)."""
+    E = mean_anom.copy()
+    for _ in range(50):
+        E = E - (E - e * np.sin(E) - mean_anom) / (1 - e * np.cos(E))
+    nu = 2 * np.arctan2(np.sqrt(1 + e) * np.sin(E / 2), np.sqrt(1 - e) * np.cos(E / 2))
+    return np.cos(nu + omega) + e * np.cos(omega)
+
+
+def miss_probability_ecc(k, n, e, rng):
+    """As miss_probability, for an eccentric orbit whose conjunction (the lensing event)
+    falls at apastron, i.e. true anomaly pi at conjunction (omega = -pi/2 convention).
+    K is held fixed as a sensitivity case (review 3)."""
+    M = rng.uniform(0, 2 * np.pi, (N_MC, n))
+    v = k * kepler_rv(M, e, -np.pi / 2) + rng.normal(0, RV_NOISE_KMS, (N_MC, n))
+    return float((np.ptp(v, axis=1) < DECISION_KMS).mean())
+
+
 def main():
     q = pd.read_csv(RESULTS / "trackB" / "selflens_quicklook.csv")
     r = q[(q.tic == TIC) & (q.signal == SIGNAL)].iloc[0]
@@ -114,11 +132,17 @@ def main():
     rng = np.random.default_rng(1)
     miss = {n: miss_probability(k_min, n, rng) for n in N_EPOCHS}
     n_needed = next((n for n in N_EPOCHS if miss[n] < 0.01), None)
+    ecc = {}
+    for e in (0.5, 0.8):
+        m = {n: miss_probability_ecc(k_min, n, e, rng) for n in N_EPOCHS + [12, 16]}
+        ecc[str(e)] = {"miss_probability": m,
+                       "epochs_for_miss_below_1pct": next((n for n in sorted(m) if m[n] < 0.01), None)}
 
     out = {"tic": TIC, "signal": SIGNAL, "period_d": p, "amp_ppm": r.amp_ppm, "m_star": m_star,
            **ctx, "k_scenarios": scen, "k_min_kms": k_min,
            "rv_test": {"decision_ptp_kms": DECISION_KMS, "rv_noise_kms": RV_NOISE_KMS,
-                       "miss_probability_at_k_min": miss, "epochs_for_miss_below_1pct": n_needed}}
+                       "miss_probability_at_k_min": miss, "epochs_for_miss_below_1pct": n_needed,
+                       "eccentric_apastron_conjunction_fixed_K": ecc}}
     path = RESULTS / "trackB" / f"{TIC}_context.json"
     path.write_text(json.dumps(out, indent=2, default=lambda o: None if pd.isna(o) else str(o)))
     g = ctx["gaia"]
@@ -130,6 +154,7 @@ def main():
     for s in scen:
         print(s)
     print("miss prob at K_min:", miss, "-> epochs needed:", n_needed)
+    print("eccentric:", json.dumps(ecc))
 
 
 if __name__ == "__main__":
