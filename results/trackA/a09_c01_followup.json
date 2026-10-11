@@ -3,23 +3,23 @@
   "field": "tgt_J1627.0+1035",
   "ra": 246.7316,
   "dec": 10.68404,
-  "f0_cd": 19.532775998124855,
-  "period_h": 1.228704,
+  "f0_cd": 19.53286462847903,
+  "period_h": 1.2286984247568,
   "prewhitening": {
     "zg": {
       "n": 799,
-      "residual_peak_cd": 19.53303703704762,
-      "residual_peak_over_f0": 1.00001336414869,
-      "residual_fap": 2.1015110825650602e-07,
-      "residual_rms": 0.06767687138515961,
+      "residual_peak_cd": 23.5388888889017,
+      "residual_peak_over_f0": 1.2050914874299525,
+      "residual_fap": 0.05328824655068319,
+      "residual_rms": 0.06232544507278623,
       "median_err": 0.05301339
     },
     "zr": {
       "n": 1062,
       "residual_peak_cd": 5.623407407410256,
-      "residual_peak_over_f0": 0.28789596562977543,
-      "residual_fap": 0.006887740559500646,
-      "residual_rms": 0.07630478821695495,
+      "residual_peak_over_f0": 0.2878946593021126,
+      "residual_fap": 0.05259042136397782,
+      "residual_rms": 0.074700765396943,
       "median_err": 0.058557582999999996
     }
   },
@@ -27,50 +27,50 @@
     {
       "season": 2018,
       "n": 74,
-      "f_cd": 19.533161062302216,
-      "semi_amp_mag": 0.08935986447940324
+      "f_cd": 19.53315967765389,
+      "semi_amp_mag": 0.08935473030326274
     },
     {
       "season": 2019,
       "n": 126,
-      "f_cd": 19.53287101396083,
-      "semi_amp_mag": 0.07507581900954834
+      "f_cd": 19.5328696293125,
+      "semi_amp_mag": 0.07507644106957453
     },
     {
       "season": 2020,
       "n": 167,
-      "f_cd": 19.532730990623605,
-      "semi_amp_mag": 0.06527931770932681
+      "f_cd": 19.532739607642224,
+      "semi_amp_mag": 0.06530615758328935
     },
     {
       "season": 2021,
       "n": 429,
-      "f_cd": 19.53285101062694,
-      "semi_amp_mag": 0.08256968809151016
+      "f_cd": 19.532849625978614,
+      "semi_amp_mag": 0.08256920748063465
     },
     {
       "season": 2022,
       "n": 359,
-      "f_cd": 19.53281100395916,
-      "semi_amp_mag": 0.08412410222066863
+      "f_cd": 19.53281962097778,
+      "semi_amp_mag": 0.0841121175472113
     },
     {
       "season": 2023,
       "n": 315,
-      "f_cd": 19.533291083972497,
-      "semi_amp_mag": 0.08672394006529839
+      "f_cd": 19.53328969932417,
+      "semi_amp_mag": 0.08672794912504193
     },
     {
       "season": 2024,
       "n": 279,
-      "f_cd": 19.532730990623605,
-      "semi_amp_mag": 0.08041348347609664
+      "f_cd": 19.532729605975277,
+      "semi_amp_mag": 0.08041565940741464
     },
     {
       "season": 2025,
       "n": 112,
-      "f_cd": 19.53252095561777,
-      "semi_amp_mag": 0.07344854849889638
+      "f_cd": 19.532519570969445,
+      "semi_amp_mag": 0.07345122589014262
     }
   ],
   "gaia": {
@@ -84,9 +84,34 @@
     "pmra_error": 0.2331174,
     "pmdec_error": 0.21629919,
     "ruwe": 1.0239023,
-    "parallax_upper_conservative_mas": 0.13902367984563135,
-    "distance_lower_kpc": 7.19301921162191,
-    "abs_G_upper_bound": 4.704033898766998,
+    "astrometric_excess_noise": 0.4667448,
+    "astrometric_excess_noise_sig": 0.8656351,
+    "visibility_periods_used": 20.0,
+    "astrometric_params_solved": 31.0,
+    "ipd_gof_harmonic_amplitude": 0.013987698,
+    "ipd_frac_multi_peak": 0.0,
+    "phot_bp_rp_excess_factor": 1.0986893,
+    "parallax_sigma": -3.2464348175748095,
+    "distance_bounds": [
+      {
+        "error_inflation": 1.3,
+        "parallax_upper_3sigma_mas": 0.13902367984563135,
+        "distance_lower_kpc": 7.19301921162191,
+        "abs_G_upper_bound": 4.704033898766998
+      },
+      {
+        "error_inflation": 1.5,
+        "parallax_upper_3sigma_mas": 0.2666531958456313,
+        "distance_lower_kpc": 3.7501894429906324,
+        "abs_G_upper_bound": 6.118323965404908
+      },
+      {
+        "error_inflation": 2.0,
+        "parallax_upper_3sigma_mas": 0.5857269858456313,
+        "distance_lower_kpc": 1.7072800539593895,
+        "abs_G_upper_bound": 7.827066167381247
+      }
+    ],
     "abs_G_bw_reference": 11.3,
     "pm_total_masyr": 2.8442743990470216,
     "pm_snr": 8.944035271768707
@@ -96,7 +121,7 @@
     "FIRST": 0,
     "VLASS": 0,
     "LoTSS-DR2": 0,
-    "eRASS1": 0,
+    "eRASS1": "no coverage",
     "2SXPS": 0,
     "4XMM-DR13": 0
   }
