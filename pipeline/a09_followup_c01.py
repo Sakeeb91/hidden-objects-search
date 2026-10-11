@@ -35,6 +35,7 @@ def light_curve():
     v = pd.read_csv(RESULTS / "trackA" / "a08_vetting.csv").set_index("id").loc["C01"]
     cand = pd.read_csv(RESULTS / "trackA" / "a06_candidates.csv")
     r = cand[(cand.field == FIELD) & (cand.src == int(v.src))].iloc[0]  # match on source id
+    # v.period_d is the refined period from a08 (full precision); not the 7-figure search value
     lc = P.group_sources(pd.read_csv(ztf.CACHE / f"{FIELD}.csv.gz"))
     g = lc[lc["src"] == r.src].copy()
     g["y"] = g["mag"] - g.groupby("oid")["mag"].transform("median")
@@ -81,7 +82,10 @@ def seasons(g, f0):
 
 def gaia(ra, dec):
     q = ("SELECT source_id, phot_g_mean_mag, bp_rp, parallax, parallax_error, pmra, pmdec, "
-         "pmra_error, pmdec_error, ruwe FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT(ra,dec),"
+         "pmra_error, pmdec_error, ruwe, astrometric_excess_noise, astrometric_excess_noise_sig, "
+         "visibility_periods_used, astrometric_params_solved, ipd_gof_harmonic_amplitude, "
+         "ipd_frac_multi_peak, phot_bp_rp_excess_factor "
+         "FROM gaiadr3.gaia_source WHERE 1=CONTAINS(POINT(ra,dec),"
          f"CIRCLE({ra},{dec},{2 / 3600}))")
     d = A.gaia_query(q, "a09_gaia")
     if d.empty:
@@ -90,10 +94,14 @@ def gaia(ra, dec):
     r["source_id"] = int(d["source_id"].iloc[0])
     # Conservative bound: errors inflated x1.3 (Gaia DR3 underestimates faint-star parallax
     # errors), 3-sigma, and a 0.1 mas floor so a negative parallax never gives d = infinity.
-    plx_ub = max(r["parallax"] + 3 * 1.3 * r["parallax_error"], 0.1)
-    r["parallax_upper_conservative_mas"] = plx_ub
-    r["distance_lower_kpc"] = 1 / plx_ub
-    r["abs_G_upper_bound"] = r["phot_g_mean_mag"] + 5 * np.log10(plx_ub / 100.0)
+    r["parallax_sigma"] = r["parallax"] / r["parallax_error"]
+    # The bound depends on the error model (review 3): report several inflations.
+    r["distance_bounds"] = []
+    for infl in (1.3, 1.5, 2.0):
+        ub = max(r["parallax"] + 3 * infl * r["parallax_error"], 0.05)
+        r["distance_bounds"].append({"error_inflation": infl, "parallax_upper_3sigma_mas": ub,
+                                     "distance_lower_kpc": 1 / ub,
+                                     "abs_G_upper_bound": r["phot_g_mean_mag"] + 5 * np.log10(ub / 100.0)})
     r["abs_G_bw_reference"] = 11.3  # PSR J1653-0158 companion (75-min orbit), G ~ 20.9 at ~0.84 kpc
     r["pm_total_masyr"] = float(np.hypot(r["pmra"], r["pmdec"]))
     r["pm_snr"] = r["pm_total_masyr"] / float(np.hypot(r["pmra_error"], r["pmdec_error"]))
@@ -101,11 +109,18 @@ def gaia(ra, dec):
 
 
 def counterparts(ra, dec, radius=30.0):
+    """Counts within radius; eRASS1 is reported as 'no coverage' outside its footprint
+    (review 3: an empty query there is not a non-detection)."""
     from astroquery.vizier import Vizier
+
+    from hos.xray import erass1_covers
 
     c = SkyCoord(ra, dec, unit="deg")
     out = {}
     for name, cat in CATALOGS.items():
+        if name == "eRASS1" and not erass1_covers(c.galactic.l.deg):
+            out[name] = "no coverage"
+            continue
         res = Vizier(row_limit=5).query_region(c, radius=radius * u.arcsec, catalog=cat)
         out[name] = int(sum(len(t) for t in res))
     return out
