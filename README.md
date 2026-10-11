@@ -1,26 +1,44 @@
 # hidden-objects-search
 
-A reproducible search of public archival survey data for astronomical objects that
-are in no existing catalog, built to try to prove each signal is *not* real before
-calling it a candidate.
+A reproducible search of public archival survey data for astronomical objects that are in
+no existing catalogue, built to try to prove each signal is *not* real before calling it a
+candidate. Every threshold was frozen before targets were examined, and two independent
+reviews (a fresh Claude agent and Codex GPT-6-Astra) audited the code and the maths.
 
-- **Track A: spider-pulsar companions.** Optical periodic modulation from Gaia sources
-  inside unassociated Fermi-LAT gamma-ray sources (4FGL-DR4), using ZTF light curves.
-- **Track B: self-lensing compact companions.** Periodic brightening pulses in TESS
-  light curves, which a white dwarf, neutron star or black hole would produce.
+## Results (2026-10-10)
 
-**Status:** work in progress. Nothing here is a confirmed discovery. See
-[STATUS.md](STATUS.md) for current state and [PROJECT.md](PROJECT.md) for scope.
+| Track | Question | Result |
+|---|---|---|
+| **A — spider pulsars** | Do the unassociated Fermi-LAT sources **new in 4FGL-DR4** hide black-widow/redback companions visible in ZTF? | **No candidate.** 15 target ellipses: 30 spider-like periodic stars vs 35.0 expected from 45 matched off-source ellipses; none has an X-ray counterpart. Blind recovery of known spiders 9/11. Report: [docs/trackA_spider_report.md](docs/trackA_spider_report.md) |
+| **B — self-lensing** | Are any periodic *brightenings* in 526 nearby TESS stars (from the reference project) a white dwarf, neutron star or black hole lensing its companion? | **No candidate.** All 17 flag-free signals excluded (16 by Gaia radial velocities, familywise ≤ 0.003; one by a mass-aware duration test). Report: [docs/trackB_selflensing_report.md](docs/trackB_selflensing_report.md) |
 
-Inspired by [paraschopra/tess-planet-candidates](https://github.com/paraschopra/tess-planet-candidates);
-lessons we design around are in [docs/references/inspiration.md](docs/references/inspiration.md).
+By-product: uncatalogued periodic variables in the Fermi ellipses, notably a probable new
+halo SX Phe pulsator (C01, P = 1.229 h; `results/trackA/a09_c01_followup.json`).
+
+Nothing here is a confirmed discovery.
+
+## Layout
+
+See [PROJECT.md](PROJECT.md) for scope and the directory map, [DECISIONS.md](DECISIONS.md)
+for every consequential choice, [STATUS.md](STATUS.md) for state, and `docs/review/` for the
+reviews and point-by-point responses.
 
 ## Quick start
 
 ```bash
 uv sync
-uv run pytest -q
+uv run pytest -q -m "not network"
+# Track B
+uv run python pipeline/b01_selflens_quicklook.py
+# Track A (downloads ZTF light curves; hours)
+uv run python pipeline/a01_fermi_select.py && uv run python pipeline/a02_build_fields.py
+uv run python pipeline/a03_fetch_ztf.py 8 && uv run python pipeline/a04_period_search.py 10
+uv run python pipeline/a05_calibrate.py   # commit its output before the next step
+uv run python pipeline/a06_targets.py && uv run python pipeline/a07_injection.py 300
 ```
+
+Inspired by [paraschopra/tess-planet-candidates](https://github.com/paraschopra/tess-planet-candidates);
+lessons are in [docs/references/inspiration.md](docs/references/inspiration.md).
 
 ## License
 
