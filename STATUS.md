@@ -1,24 +1,24 @@
 # STATUS.md
 
-## 2026-10-09 (evening)
+## 2026-10-10
 
 **Done:**
-- Foundation docs, uv environment, archive helpers, CI (offline tests).
-- **Track B (self-lensing): complete, negative.** After two independent reviews, all 17
-  flag-free inverted signals are excluded under circular orbits (16 by calibrated Gaia RV
-  probabilities, familywise ≤ 0.003; the former survivor by the mass-aware duration test).
-  Report: `docs/trackB_selflensing_report.md`.
-- **Track A design** (spider pulsars in 4FGL-DR4-new unassociated sources): fields,
-  period search, X-ray, novelty, statistics, freeze guard, injection stage — all revised
-  per `docs/review/RESPONSE_TO_REVIEWS.md`.
-- Reviews: `docs/review/REVIEW_CLAUDE_2026-10-09.md`, `REVIEW_CODEX_ASTRA_2026-10-09.md`.
+- **Track B (self-lensing): complete, negative.** All 17 flag-free inverted TESS signals
+  excluded under circular orbits. `docs/trackB_selflensing_report.md`.
+- **Track A (spider pulsars in 4FGL-DR4-new sources): complete, negative.** 15 targets,
+  45 matched off-source fields, 13 blind controls; calibration frozen at `1554eac` before
+  targets; 30 spider-like stars vs 35.0 expected, no X-ray counterparts; injection-recovery
+  and vetting done; C01 identified as a probable halo SX Phe star.
+  `docs/trackA_spider_report.md`.
+- Two independent reviews of design and maths, with point-by-point responses
+  (`docs/review/`). CI green.
 
-**In progress:** ZTF download for 83 fields (tiled cones; dense fields are slow).
+**In progress:** final independent audit of the Track A *results* (Codex GPT-6-Astra).
 
-**Next:**
-1. a04 period search on control + off-source fields (provenance-checked caches).
-2. a05 calibration → commit frozen JSON (cuts + code hashes).
-3. a04 on targets → a06 target evaluation → a07 injection-recovery.
-4. Report + a second review pass on the Track A results.
+**Possible next steps (not started):**
+1. Deferred Track A targets (3 near the plane, 2 dense) via a TAP pre-selection.
+2. Extend Track A to all 2,563 unassociated/unk 4FGL sources not covered by Lu+2024.
+3. Track B: a dedicated self-lensing search without the reference's 10σ clipping.
+4. Report C01 to VSX as a new variable star.
 
-**Blockers:** IRSA throughput only.
+**Blockers:** none.
