@@ -1,0 +1,43 @@
+{
+  "optical": {
+    "observed": 30,
+    "expected": 33.75,
+    "p_excess": 0.7396650314331055,
+    "p_deficit": 0.31462669372558594,
+    "p_two_sided": 0.6006269454956055
+  },
+  "optical_plus_uniform_xray": {
+    "observed": 0,
+    "expected": 0.5,
+    "p_excess": 1.0,
+    "p_deficit": 0.5625,
+    "p_two_sided": 1.0
+  },
+  "fields_with_survivors": 7,
+  "controls": {
+    "independent_n": 11,
+    "period_ok_and_all_cuts": 8,
+    "period_ok_and_all_cuts_and_rank1": 7,
+    "uniform_xray_all13": 3,
+    "uniform_xray_and_recovered_all13": 1
+  },
+  "conditional_limits": [
+    {
+      "semi_amplitude_mag": 0.2,
+      "ztf_mag_bin": "19-20",
+      "efficiency": 0.7285,
+      "n_trials": 70,
+      "N95_conditional": 14,
+      "N95_with_95pct_containment": 15
+    },
+    {
+      "semi_amplitude_mag": 0.4,
+      "ztf_mag_bin": "19-20",
+      "efficiency": 0.8335624999999999,
+      "n_trials": 48,
+      "N95_conditional": 11,
+      "N95_with_95pct_containment": 12
+    }
+  ],
+  "limit_caveat": "assumes <=1 companion per target and a common efficiency; with 7 fields containing survivors, no bound below 15 is defensible for an unspecified population"
+}
