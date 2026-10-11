@@ -29,8 +29,8 @@ star; a blended neighbour producing the signal is not covered.
 3. **Kill K2 (Gaia RVs):** the minimum mass forces a semi-amplitude K. From Gaia DR3's
    robust RV range over N transits, compute the probability that a real companion shows
    a range that small at random phases, including Gaia's 3-IQR clipping (exact quadrature
-   and Monte Carlo, both matching review 2). Exclude only if that probability times the
-   17 signals screened is below 0.05.
+   and Monte Carlo, both matching review 2). Exclude only if the 95% Monte Carlo upper
+   bound on that probability, times the 17 signals screened, is below 0.05.
 4. Phase curve (beaming at P, ellipsoidal at P/2) for the signal that survived the first
    version of the screen.
 
@@ -38,12 +38,12 @@ star; a blended neighbour producing the signal is not covered.
 
 | Outcome (circular orbits) | Count |
 |---|---|
-| Excluded by Gaia RVs (familywise false-exclusion probability ≤ 0.003; needed K = 21–149 km/s, Gaia robust ranges 0.8–4.1 km/s) | 16 |
+| Excluded by Gaia RVs (familywise false-exclusion probability, 95% Monte Carlo upper bound ≤ 0.0034; needed K = 21–149 km/s, Gaia robust ranges 0.8–4.1 km/s) | 16 |
 | Excluded by the mass-aware duration test | 4 (3 of them also by RVs) |
 | **Not excluded** | **0** |
 
-The weakest RV exclusion is TIC 362506371 (5 RV transits; familywise 0.003, i.e. strong
-at 95% but not at 3σ). The tail probabilities assume independent random phases; Gaia's
+The weakest RV exclusion is TIC 362506371 (5 RV transits; familywise upper bound 0.0033,
+i.e. strong at 95% but not at 3σ). The tail probabilities assume independent random phases; Gaia's
 actual epoch times could cluster, which would weaken the stars with few transits.
 
 ### The former survivor: TIC 243307945 signal 3 (CD-41 7984)
@@ -72,10 +72,13 @@ P = 6.2698 d, +102 ± 13 ppm, 4.8 h. Numbers from `b03_survivor_context.py`
 **No self-lensing candidate among the 17 flag-free inverted signals** (circular orbits).
 
 If anyone wants to close the eccentric-orbit loophole for CD-41 7984: a self-lensing
-companion would force a radial-velocity semi-amplitude **K ≥ 33 km/s** (NS/BH lens,
-R★ = 0.85–1.01 R☉) or **≈ 63–67 km/s** (white-dwarf lens). Two random-phase spectra are
-not enough (44% chance of a < 20 km/s range at K = 33 km/s); **six random-phase spectra**
-bring the miss probability below 1%, or fewer timed near quadrature.
+companion would force a radial-velocity semi-amplitude **K ≥ 33 km/s** in a circular
+orbit (NS/BH lens, R★ = 0.85–1.01 R☉) or **≈ 63–67 km/s** (white-dwarf lens). Two
+random-phase spectra are not enough (44% chance of a < 20 km/s range at K = 33 km/s).
+Six random-phase spectra suffice for a circular orbit (miss < 1%), but the loophole being
+closed *is* eccentricity: with conjunction at apastron and e = 0.8 (K held at 33 km/s), six
+spectra miss 4.9% of the time and **twelve** are needed for < 1%
+(`results/trackB/243307945_context.json`).
 
 ## Caveats
 
