@@ -117,7 +117,7 @@ def main():
             bands[b] = (gb["mjd"].to_numpy(), y)
         main_band = max(bands, key=lambda b: len(bands[b][0]))
         sm = shape_metrics(*bands[main_band], r.period_d)
-        rec = {"id": f"C{k:02d}", "field": r.field, "ra": r.ra, "dec": r.dec,
+        rec = {"id": f"C{k:02d}", "field": r.field, "src": int(r.src), "ra": r.ra, "dec": r.dec,
                "period_d": r.period_d, "score": r.score, "coherence": r.coherence,
                "g_mag": r.g_mag, "r_mag": getattr(r, "r_mag", np.nan), "main_band": main_band,
                **sm, "colour_amp": colour_amplitude(bands.get("zg"), bands.get("zr"), r.period_d),
