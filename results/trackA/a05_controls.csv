@@ -1,0 +1,14 @@
+field,type,true_p_d,n_inside,status,score,period_d,period_ok,rank_by_score,spider_like,xray_uniform,xray_any,n_spider_like_in_field,independent
+ctrl_J1810+1744,BW,0.14817,116,found,248.455,0.148171,True,1,True,False,False,3,True
+ctrl_J1947-1120,HM,10.2642,557,found,304.91,1.23785,False,1,True,False,False,2,False
+ctrl_J1023+0038,RB,0.198096,12,found,11.1442,0.198095,True,1,False,True,True,0,False
+ctrl_J1048+2339,RB,0.250519,53,found,47.9761,0.0999149,False,1,True,False,True,1,True
+ctrl_J1622-0315,RB,0.161701,73,found,64.8148,0.0808504,True,1,True,False,True,1,True
+ctrl_J1816+4510,RB,0.360893,52,found,254.655,0.180448,True,1,True,False,False,3,True
+ctrl_J2129-0429,RB,0.635228,12,found,10.4391,0.317617,True,1,False,False,True,0,True
+ctrl_J2339-0533,RB,0.193098,7,found,213.353,0.1931,True,1,True,False,True,1,True
+ctrl_4FGL_J0327.3+2355,RBc,0.291036,488,found,224.001,0.145518,True,1,True,False,False,4,True
+ctrl_1FGL_J0523.5-2529,RBc,0.688134,14,found,74.2153,0.344072,True,1,True,True,True,1,True
+ctrl_3FGL_J1544.6-1125,RBc,0.241536,76,found,1.45917,0.0434541,False,15,False,True,True,0,True
+ctrl_4FGL_J1813.5+2819,RBc,0.293915,524,found,316.689,0.146958,True,1,True,False,False,23,True
+ctrl_4FGL_J2054.2+6904,RBc,0.622217,222,found,91.8953,0.31111,True,2,True,False,True,3,True

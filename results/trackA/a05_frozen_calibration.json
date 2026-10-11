@@ -1,0 +1,296 @@
+{
+  "frozen_before_targets": true,
+  "cuts": {
+    "period_min_d": 0.041666666666666664,
+    "period_max_d": 1.5,
+    "amp_min_mag": 0.05,
+    "amp_snr_min": 5.0,
+    "coherence_min": 2.0,
+    "s_min": 5.0,
+    "common_period_n": 3,
+    "common_period_tol": 0.002,
+    "bands_agree": true,
+    "inside_95pct_ellipse": true
+  },
+  "code_sha256": {
+    "pipeline/a05_calibrate.py": "48a4ba88e935f32c6d5230fbd286865c8029239a85b0a1194b737c67cf7b2d7a",
+    "src/hos/period.py": "e55edefadda60b4614224c0dd1cabf411855adbcb0f0f079f5376e6219ff4601",
+    "src/hos/sky.py": "dcf0325ad7d816ba740e3291999dc547030c79aa72ffd42d6f09acff4b213dc4",
+    "src/hos/xray.py": "ab70d0a8b5835fec089d9eb44ee3b5ab4b2efd8f5dd0e0a0cba8a7a54e05a110",
+    "src/hos/fields.py": "28839c59fc94134ad43ee907fc930a537691f550c6c1fafbd4fc9fc2c4bef543"
+  },
+  "n_null_fields": 45,
+  "null_rate_by_score": {
+    "5.0": {
+      "mean_per_ellipse": 2.3333333333333335,
+      "frac_fields_with_any": 0.5333333333333333
+    },
+    "8.0": {
+      "mean_per_ellipse": 2.2666666666666666,
+      "frac_fields_with_any": 0.5333333333333333
+    },
+    "12.0": {
+      "mean_per_ellipse": 1.8666666666666667,
+      "frac_fields_with_any": 0.5333333333333333
+    },
+    "20.0": {
+      "mean_per_ellipse": 1.1333333333333333,
+      "frac_fields_with_any": 0.4666666666666667
+    },
+    "40.0": {
+      "mean_per_ellipse": 0.7333333333333333,
+      "frac_fields_with_any": 0.4444444444444444
+    }
+  },
+  "null_rate_spider_like_with_uniform_xray": {
+    "mean_per_ellipse": 0.044444444444444446,
+    "n_total": 2,
+    "frac_fields_with_any": 0.044444444444444446
+  },
+  "null_counts": {
+    "null_J0549.0-0233_0": {
+      "parent": "4FGL J0549.0-0233",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0549.0-0233_1": {
+      "parent": "4FGL J0549.0-0233",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0549.0-0233_2": {
+      "parent": "4FGL J0549.0-0233",
+      "spider_like": 1,
+      "spider_like_xray": 1
+    },
+    "null_J0640.5-2714_0": {
+      "parent": "4FGL J0640.5-2714",
+      "spider_like": 3,
+      "spider_like_xray": 0
+    },
+    "null_J0640.5-2714_1": {
+      "parent": "4FGL J0640.5-2714",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0640.5-2714_2": {
+      "parent": "4FGL J0640.5-2714",
+      "spider_like": 5,
+      "spider_like_xray": 0
+    },
+    "null_J2348.6-2054_0": {
+      "parent": "4FGL J2348.6-2054",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2348.6-2054_1": {
+      "parent": "4FGL J2348.6-2054",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2348.6-2054_2": {
+      "parent": "4FGL J2348.6-2054",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0604.9-1042_0": {
+      "parent": "4FGL J0604.9-1042",
+      "spider_like": 2,
+      "spider_like_xray": 0
+    },
+    "null_J0604.9-1042_1": {
+      "parent": "4FGL J0604.9-1042",
+      "spider_like": 3,
+      "spider_like_xray": 0
+    },
+    "null_J0604.9-1042_2": {
+      "parent": "4FGL J0604.9-1042",
+      "spider_like": 2,
+      "spider_like_xray": 0
+    },
+    "null_J1140.4+0022_0": {
+      "parent": "4FGL J1140.4+0022",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1140.4+0022_1": {
+      "parent": "4FGL J1140.4+0022",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J1140.4+0022_2": {
+      "parent": "4FGL J1140.4+0022",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1627.0+1035_0": {
+      "parent": "4FGL J1627.0+1035",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J1627.0+1035_1": {
+      "parent": "4FGL J1627.0+1035",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J1627.0+1035_2": {
+      "parent": "4FGL J1627.0+1035",
+      "spider_like": 2,
+      "spider_like_xray": 0
+    },
+    "null_J1546.4-1409_0": {
+      "parent": "4FGL J1546.4-1409",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1546.4-1409_1": {
+      "parent": "4FGL J1546.4-1409",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1546.4-1409_2": {
+      "parent": "4FGL J1546.4-1409",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J2328.8+4537_0": {
+      "parent": "4FGL J2328.8+4537",
+      "spider_like": 3,
+      "spider_like_xray": 0
+    },
+    "null_J2328.8+4537_1": {
+      "parent": "4FGL J2328.8+4537",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J2328.8+4537_2": {
+      "parent": "4FGL J2328.8+4537",
+      "spider_like": 2,
+      "spider_like_xray": 0
+    },
+    "null_J0021.7+4533_0": {
+      "parent": "4FGL J0021.7+4533",
+      "spider_like": 2,
+      "spider_like_xray": 0
+    },
+    "null_J0021.7+4533_1": {
+      "parent": "4FGL J0021.7+4533",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J0021.7+4533_2": {
+      "parent": "4FGL J0021.7+4533",
+      "spider_like": 4,
+      "spider_like_xray": 0
+    },
+    "null_J2032.0+0229_0": {
+      "parent": "4FGL J2032.0+0229",
+      "spider_like": 17,
+      "spider_like_xray": 0
+    },
+    "null_J2032.0+0229_1": {
+      "parent": "4FGL J2032.0+0229",
+      "spider_like": 14,
+      "spider_like_xray": 0
+    },
+    "null_J2032.0+0229_2": {
+      "parent": "4FGL J2032.0+0229",
+      "spider_like": 8,
+      "spider_like_xray": 0
+    },
+    "null_J0122.4-1509_0": {
+      "parent": "4FGL J0122.4-1509",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0122.4-1509_1": {
+      "parent": "4FGL J0122.4-1509",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J0122.4-1509_2": {
+      "parent": "4FGL J0122.4-1509",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1102.1+1318_0": {
+      "parent": "4FGL J1102.1+1318",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1102.1+1318_1": {
+      "parent": "4FGL J1102.1+1318",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1102.1+1318_2": {
+      "parent": "4FGL J1102.1+1318",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2307.8-1655_0": {
+      "parent": "4FGL J2307.8-1655",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2307.8-1655_1": {
+      "parent": "4FGL J2307.8-1655",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2307.8-1655_2": {
+      "parent": "4FGL J2307.8-1655",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J2050.4+1807_0": {
+      "parent": "4FGL J2050.4+1807",
+      "spider_like": 10,
+      "spider_like_xray": 0
+    },
+    "null_J2050.4+1807_1": {
+      "parent": "4FGL J2050.4+1807",
+      "spider_like": 9,
+      "spider_like_xray": 0
+    },
+    "null_J2050.4+1807_2": {
+      "parent": "4FGL J2050.4+1807",
+      "spider_like": 11,
+      "spider_like_xray": 1
+    },
+    "null_J1235.9+1136_0": {
+      "parent": "4FGL J1235.9+1136",
+      "spider_like": 1,
+      "spider_like_xray": 0
+    },
+    "null_J1235.9+1136_1": {
+      "parent": "4FGL J1235.9+1136",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    },
+    "null_J1235.9+1136_2": {
+      "parent": "4FGL J1235.9+1136",
+      "spider_like": 0,
+      "spider_like_xray": 0
+    }
+  },
+  "dispersion_index": {
+    "spider_like": 6.837662337662337,
+    "spider_like_xray": 0.9772727272727272
+  },
+  "controls_independent": {
+    "n": 11,
+    "found": 11,
+    "period_ok": 9,
+    "spider_like": 9,
+    "rank1": 9
+  },
+  "controls_all": {
+    "n": 13,
+    "found": 13,
+    "period_ok": 10,
+    "spider_like": 10,
+    "rank1": 11
+  },
+  "control_caveat": "control ellipses are ~7x smaller in area than target ellipses, so ranks overstate sensitivity in target-sized fields"
+}
