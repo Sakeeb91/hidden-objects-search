@@ -119,6 +119,10 @@ pulsar companion.
 
 ## Caveats
 
+- The freeze is established by git order (calibration `1554eac` 21:41:20, first target
+  output `f571c48` 21:47:12) and by the code-hash guard. Target period tables existed
+  (untracked) before the freeze, as disclosed in DECISIONS.md; git cannot prove they were
+  not read, only that no committed target output predates the calibration.
 - Five DR4-new targets were deferred (plane and density cuts).
 - Faint black-widow companions (G > 20) are largely beyond ZTF's reach here.
 - The compound X-ray tier has low completeness (2/13 known spiders).
