@@ -33,17 +33,20 @@ target was examined; `a06` refuses to run otherwise.
 
 - Spider-like periodic stars per null ellipse: **2.33** (dispersion index 6.8).
 - Spider-like **with** a uniform X-ray match: **2 in 45 ellipses** (0.044 per ellipse).
-- Blind controls: all 11 independent known companions are in the ZTF tables; **9/11** are
-  recovered at the right period (or P/2), pass every cut and rank **first** in their
-  field. Misses: transitional pulsar 3FGL J1544.6−1125 (disk state, no coherent orbit),
-  J1048+2339 (wrong period), J2129−0429 (coherence 1.3 < 2).
-- Only **2/13** known spiders have a uniform-survey X-ray match: the compound tier is
-  high-purity but low-completeness.
+- Blind controls (`results/trackA/a10_population.json`): all 11 independent known
+  companions are in the ZTF tables; **8/11** are recovered at the right period (or P/2)
+  *and* pass every cut, and **7/11** of those also rank first in their field. Misses
+  include the transitional pulsar 3FGL J1544.6−1125 (disk state, no coherent orbit),
+  J1048+2339 (wrong period) and J2129−0429 (coherence 1.3 < 2).
+- Only **3/13** known spiders have a uniform-survey X-ray match, and only **1/13** also
+  passes the optical cuts at the right period: the compound tier is high-purity but
+  very low completeness.
 - Control ellipses are ~7× smaller than target ellipses, so ranks overstate sensitivity.
 
 ## Sensitivity (injection-recovery, `a07`)
 
-1,500 irradiation/ellipsoidal signals planted in real off-source light curves:
+1,500 irradiation/ellipsoidal signals (orbital periods 2–24 h, log-uniform) planted in real
+off-source light curves; magnitudes are the **median ZTF magnitude** of the host, not Gaia G:
 
 | Semi-amplitude | G < 18 | 18–19 | 19–20 | > 20 |
 |---|---|---|---|---|
@@ -52,8 +55,12 @@ target was examined; `a06` refuses to run otherwise.
 | 0.20 mag | 90–100% | 76–82% | 69–77% | 23–29% |
 | 0.40 mag | 71–100% | 89–100% | 78–90% | 57–66% |
 
-Complete for typical redback companions (0.2–1 mag) brighter than G ≈ 19.5; weak for
-black-widow companions fainter than G ≈ 20.
+Recovery is high (≳ 75%) for 0.2–0.4 mag semi-amplitudes brighter than ZTF mag ≈ 20 and
+poor fainter than 20, where most black-widow companions lie. These are **conditional
+optical efficiencies**, not survey completeness: hosts are already-detected ZTF objects
+(54% fainter than mag 20), the ellipse-containment and per-field common-period losses are
+bypassed, shapes are idealised, and C01-like orbits below 2 h are not injected. At ZTF mag
+19–20 the recovery is 73% (95% CI 61–83%) at 0.2 mag and 83% (70–93%) at 0.4 mag.
 
 ## Result
 
@@ -65,9 +72,14 @@ black-widow companions fainter than G ≈ 20.
 | Known pulsar / spider candidate (SpiderCat, Lu+2024, ATNF) | 0 | — |
 
 Per field, the largest excess is 4FGL J1627.0+1035 (7 vs 4 in its three nulls,
-matched-binomial p = 0.0076, **Holm-adjusted 0.11**). **No target field shows a
-significant excess, and the population of spider-like stars in the ellipses matches the
-off-source background.**
+matched-binomial p = 0.0076, **Holm-adjusted 0.11**). Across all targets, an exact
+stratified permutation test over the matched quartets gives **p = 0.74** for an excess
+(two-sided 0.60). **No target field and no population-level excess is detected.**
+
+This does not show that every star in the ellipses is unrelated to the gamma-ray source:
+seven target fields contain spider-like stars, so no small upper limit follows. Even under
+favourable assumptions (≤ 1 companion per target, common efficiency 73–83%), the
+conditional 95% limit is 11–15 companions among 15 targets (`a10_population.json`).
 
 ## The uncatalogued periodic stars (`a08`, `a09`)
 
@@ -80,21 +92,30 @@ checked 2026-10-10). Vetting (`results/trackA/a08_vetting.csv`, figures in
   0.9619 d): cadence systematics.
 - 3 look like contact/ellipsoidal binaries (equal minima at 2P); 1 like a pulsator; the
   rest are faint and unclassified.
-- **C01** (P = 1.229 h, G = 19.0, BP−RP = 0.43, 4FGL J1627.0+1035 ellipse) was the most
-  spider-like (symmetric sinusoid; black widows reach 75-min orbits). It fails the
-  spider interpretation: monoperiodic and stable over 2018–2025; Gaia parallax
-  −0.69 ± 0.21 mas puts it beyond ~7 kpc (conservative), so M_G ≲ 4.7, more than 6 mag
-  brighter than a 1.2-h black-widow companion; no radio (NVSS, FIRST, VLASS, LoTSS) or
-  X-ray (eRASS1, 2SXPS, 4XMM) counterpart. Most likely a **halo SX Phe pulsator**.
-- C15 (P = 2.46 h, sharp brightenings) has Gaia M_G = 9.2, BP−RP = 2.1: an M dwarf, most
-  likely a flaring fast rotator.
+- **C01** (P = 1.2286984 h after refinement, G = 19.0, BP−RP = 0.43, 4FGL J1627.0+1035
+  ellipse) was the most spider-like (symmetric sinusoid; black widows reach 75-min
+  orbits). Evidence (`a09_c01_followup.json`): no significant second mode after
+  pre-whitening (residual FAP ≈ 0.05 in g and r); frequency and amplitude stable over
+  2018–2025 (both expected for a pulsator *and* for an orbit); clean astrometry (RUWE 1.02,
+  20 visibility periods) with parallax −0.69 ± 0.21 mas (−3.2σ). The distance bound
+  depends on the error model: d > 7.2 / 3.8 / 1.7 kpc and M_G < 4.7 / 6.1 / 7.8 for error
+  inflations 1.3 / 1.5 / 2.0, each brighter than the 75-min black widow PSR J1653−0158's
+  companion (M_G ≈ 11.3), though black-widow luminosities vary. No radio counterpart
+  (NVSS, FIRST, VLASS, LoTSS; radio-quiet spiders exist) and none in 2SXPS or 4XMM;
+  **eRASS1 does not cover it** (l = 25.8°). Verdict: an **SX Phe / δ Sct candidate**; the
+  spider interpretation is disfavoured, not excluded.
+- C15 (P = 2.46 h, sharp brightenings) has Gaia M_G = 9.2, BP−RP = 2.1: an M dwarf,
+  plausibly a flaring fast rotator.
+- Contact-like morphology (equal minima at 2P) does not exclude an ellipsoidally
+  modulated spider companion; those stars are unexamined, not cleared.
 
 ## Verdict
 
-**No spider-pulsar candidate in the 15 new 4FGL-DR4 sources searched**, at the
-sensitivity above. The search did find **uncatalogued periodic variables** in these
-ellipses, the clearest being C01, a probable new SX Phe star; these are ordinary stars,
-not the gamma-ray sources.
+**No significant excess and no compelling spider identification** in the 15 new
+4FGL-DR4 sources searched. The search found **uncatalogued periodic variables** in these
+ellipses, the clearest being C01, an SX Phe / δ Sct candidate; none has the multi-
+wavelength evidence (X-ray, radio, colour-phase behaviour) needed to propose it as a
+pulsar companion.
 
 ## Caveats
 
