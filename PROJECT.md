@@ -68,3 +68,5 @@ box-least-squares on inverted flux (Track B).
 | `results/` | Small, committed outputs (CSV/JSON summaries, candidate tables) |
 | `docs/` | Reports, figures, review notes |
 | `docs/references/` | Inspiration notes and external method references |
+| `docs/review/` | Independent reviews (verbatim) and point-by-point responses |
+| `docs/handoff/` | Session handoff documents and kickoff prompts |

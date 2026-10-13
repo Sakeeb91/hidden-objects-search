@@ -15,7 +15,12 @@
 
 **Done:** final results audit (review 3) and all its corrections; headline is "no significant excess, no compelling identification".
 
-**Possible next steps (not started):**
+**Next (approved by the user 2026-10-13): Track A2** — extend the spider search to
+DR1–3 unassociated sources. Handoff: `docs/handoff/2026-10-13_trackA2_handoff.md`;
+kickoff prompt: `docs/handoff/KICKOFF_PROMPT_trackA2.md`. Reviewed A1 state is tag
+`trackA1-final`.
+
+**Other possible next steps (not started):**
 1. Deferred Track A targets (3 near the plane, 2 dense) via a TAP pre-selection.
 2. Extend Track A to all 2,563 unassociated/unk 4FGL sources not covered by Lu+2024.
 3. Track B: a dedicated self-lensing search without the reference's 10σ clipping.
